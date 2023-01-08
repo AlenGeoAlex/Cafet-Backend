@@ -19,6 +19,7 @@ public static class BootstrapExtension
     {
         applicationBuilder.Services.AddDbContext<CafeContext>(builderOptions =>
         {
+            builderOptions.EnableSensitiveDataLogging(true);
             builderOptions.UseSqlServer(applicationBuilder.Configuration.GetConnectionString("DefaultConnection"));
         });
 
@@ -26,6 +27,7 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddScoped<IRoleRepository, RoleRepository>();
         applicationBuilder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         applicationBuilder.Services.AddScoped<IFoodRepository, FoodRepository>();
+        applicationBuilder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
         applicationBuilder.Services.AddSingleton(typeof(ImageProviderManager));
         applicationBuilder.Services.AddAutoMapper(typeof(MapProvider));
         applicationBuilder.Services.Configure<FormOptions>(o =>
@@ -55,11 +57,6 @@ public static class BootstrapExtension
         
         return applicationBuilder;
     }
-
-    /*public static WebApplicationBuilder InitJsonBuilder(this WebApplicationBuilder applicationBuilder)
-    {
-        applicationBuilder.Services.Add
-    }*/
 
     public static WebApplicationBuilder InitConfigurationOptions(this WebApplicationBuilder applicationBuilder)
     {

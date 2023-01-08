@@ -1,14 +1,17 @@
-﻿using Cafet_Backend.Provider.Image;
+﻿using Cafet_Backend.Abstracts;
+using Cafet_Backend.Provider.Image;
 
 namespace Cafet_Backend.Manager;
 
 public class ImageProviderManager
 {
-    public readonly FoodImageProvider FoodImageProvider;
-    public readonly IWebHostEnvironment? WebHostEnvironment;
+    public readonly AbstractImageProvider FoodImageProvider;
+    public readonly AbstractImageProvider UserImageProvider;
+    private readonly IWebHostEnvironment _webHostEnvironment;
     public ImageProviderManager(IWebHostEnvironment webHostEnvironment)
     {
-        this.WebHostEnvironment = WebHostEnvironment;
+        this._webHostEnvironment = webHostEnvironment;
         this.FoodImageProvider = new FoodImageProvider(webHostEnvironment);
+        this.UserImageProvider = new UserImageProvider(webHostEnvironment);
     }
 }

@@ -8,7 +8,6 @@ namespace Cafet_Backend.Context;
 
 public class CafeContext : DbContext
 {
-
     public DbSet<Role> Roles { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Cart> Carts { get; set; }
@@ -22,56 +21,66 @@ public class CafeContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
+        try
+        {        base.OnModelCreating(modelBuilder);
+            EntityTypeBuilder<Role> roleBuilder = modelBuilder.Entity<Role>();
+            //Adding Default Roles
+                 roleBuilder.HasData(Role.Administrator);
+                 roleBuilder.HasData(Role.CafetStaff);
+                 roleBuilder.HasData(Role.Customer);
+         
+                 var cartBuilder = modelBuilder.Entity<Cart>();
+                 cartBuilder.Property(entity => entity.CartData)
+                     .IsRequired()
+                     .HasConversion(
+                         outp => (outp == null) ? JsonConvert.SerializeObject(new Dictionary<int, int>()) : JsonConvert.SerializeObject(outp),
+                         input => JsonConvert.DeserializeObject<Dictionary<int, int>>(input) ?? new Dictionary<int, int>()
+                     );
 
-        
-        var cartBuilder = modelBuilder.Entity<Cart>();
-        cartBuilder.Property(entity => entity.CartData)
-            .IsRequired()
-            .HasConversion(
-                outp => (outp == null) ? JsonConvert.SerializeObject(new Dictionary<int, int>()) : JsonConvert.SerializeObject(outp),
-                input => JsonConvert.DeserializeObject<Dictionary<int, int>>(input) ?? new Dictionary<int, int>()
-            );
-
-        //Configuring Users
-        var userBuilder = modelBuilder.Entity<User>();
-        userBuilder
-            .Property(u => u.Activated)
-            .HasDefaultValue(false);
-
-        userBuilder
-            .Property(u => u.Deleted)
-            .HasDefaultValue(false);
-        
-        userBuilder
-            .Property(u => u.WalletBalance)
-            .HasDefaultValue(0.0);
-
-        userBuilder
-            .Property(u => u.FirstName)
-            .IsRequired(false);
-        
-        userBuilder
-            .Property(u => u.LastName)
-            .IsRequired(false);
-
-        userBuilder
-            .Property(u => u.ProfileImage)
-            .IsRequired()
-            .HasDefaultValue("default.png");
-
-        var foodBuilder = modelBuilder.Entity<Food>();
-
-        foodBuilder
-            .Property(f => f.FoodImage)
-            .HasDefaultValue("default.png");
-        
-        
-        //Adding Default Roles
-        EntityTypeBuilder<Role> roleBuilder = modelBuilder.Entity<Role>();
-        roleBuilder.HasData(Role.Administrator);
-        roleBuilder.HasData(Role.CafetStaff);
-        roleBuilder.HasData(Role.Customer);
-
+                 cartBuilder.HasData(Cart.DummyCart);
+         
+         
+                 //Configuring Users
+                 var userBuilder = modelBuilder.Entity<User>();
+                 userBuilder
+                     .Property(u => u.Activated)
+                     .HasDefaultValue(false);
+         
+                 userBuilder
+                     .Property(u => u.Deleted)
+                     .HasDefaultValue(false);
+                 
+                 userBuilder
+                     .Property(u => u.WalletBalance)
+                     .HasDefaultValue(0.0);
+         
+                 userBuilder
+                     .Property(u => u.FirstName)
+                     .IsRequired(false);
+                 
+                 userBuilder
+                     .Property(u => u.LastName)
+                     .IsRequired(false);
+         
+                 userBuilder
+                     .Property(u => u.ProfileImage)
+                     .IsRequired()
+                     .HasDefaultValue("default.png");
+         
+                 var foodBuilder = modelBuilder.Entity<Food>();
+         
+                 foodBuilder
+                     .Property(f => f.FoodImage)
+                     .HasDefaultValue("default.png");
+         
+         
+         
+                 //Adding Default Administrator
+                 userBuilder.HasData(User.DefaultAdmin);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 }

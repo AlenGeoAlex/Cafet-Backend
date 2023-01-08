@@ -56,4 +56,14 @@ public abstract class AbstractImageProvider
     {
         File.Delete(fileName);
     }
+
+    public string GetDefaultImageName()
+    {
+        return "default.png";
+    }
+
+    public Stream? GetDefaultImage()
+    {
+        return GetImage(GetDefaultImageName());
+    }
 }

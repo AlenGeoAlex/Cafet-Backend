@@ -5,6 +5,20 @@ namespace Cafet_Backend.Models;
 
 public class User : KeyedEntity
 {
+    public static readonly User DefaultAdmin = new User()
+    {
+        Id = -1,
+        FirstName = "Cafet",
+        LastName = "Admin",
+        CartId = Models.Cart.DummyCart.CartId,
+        EmailAddress = "adminstrator@cafet.com",
+        RoleId = Models.Role.Administrator.Id,
+        Password = "cafet-admin",
+        WalletBalance = 0.0,
+        ProfileImage = "default.png",
+        Activated = true,
+        Deleted = false,
+    };
     [MaxLength(30)] public string FirstName { get; set; }
     [MaxLength(30)] public string LastName { get; set; }
 
