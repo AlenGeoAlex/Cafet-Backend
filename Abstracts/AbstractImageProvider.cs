@@ -2,25 +2,24 @@
 
 public abstract class AbstractImageProvider
 {
-    public static readonly string BaseImageDirectory;
-
-    static AbstractImageProvider()
-    {
-        BaseImageDirectory = $"{Directory.GetCurrentDirectory()}" +
-                             $"{Path.DirectorySeparatorChar}" +
-                             $"_images" +
-                             $"{Path.DirectorySeparatorChar}";
-    }
 
     protected readonly string ProviderName;
     protected readonly string ProviderDirectory;
-    
-    protected AbstractImageProvider(string providerName)
+    protected readonly string BaseImageDirectory;
+
+    protected AbstractImageProvider(string providerName, IWebHostEnvironment hostEnvironment)
     {
+        
+        BaseImageDirectory = $"{hostEnvironment.WebRootPath}" +
+                             $"{Path.DirectorySeparatorChar}" +
+                             $"_images" +
+                             $"{Path.DirectorySeparatorChar}";
+        Console.WriteLine(BaseImageDirectory);
         ProviderName = providerName;
+        
         ProviderDirectory = $"{BaseImageDirectory}" +
                             $"{providerName.ToLower()}";
-        
+        Console.WriteLine(ProviderDirectory);
         InitDirectory();
     }
     private void InitDirectory()
@@ -51,5 +50,10 @@ public abstract class AbstractImageProvider
     public DateTime? GetLastModified(string fileName)
     {
         return File.GetLastWriteTime(AsFileName(fileName));
+    }
+
+    public void Delete(string fileName)
+    {
+        File.Delete(fileName);
     }
 }

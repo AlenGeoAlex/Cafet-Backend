@@ -1,20 +1,32 @@
-﻿using Cafet_Backend.Models;
+﻿using Cafet_Backend.Dto;
+using Cafet_Backend.Models;
 
 namespace Cafet_Backend.Interfaces;
 
 public interface IFoodRepository
 {
-    Task<Food?> GetFoodByIdAsync(int id);
+    Task<FoodDto?> GetFoodByIdAsync(int id);
 
-    Task<Food?> GetFoodByNameAsync(string name);
+    Task<Food?> GetFoodRawAsync(int id);
 
-    Task<IReadOnlyList<Food>> GetMatchingFoodOfNamesAsync(string keyword);
+    Task<FoodDto?> GetFoodByNameAsync(string name);
 
-    Task<IReadOnlyList<Food>> GetAllFoodAsync();
+    Task<IReadOnlyList<FoodDto>> GetMatchingFoodOfNamesAsync(string keyword);
 
-    Task<IReadOnlyList<Food>> GetFoodOfCategory(int id);
+    Task<IReadOnlyList<FoodDto>> GetAllFoodAsync();
+
+    Task<IReadOnlyList<FoodDto>> GetFoodOfCategory(int id);
 
     Task<bool> ContainsAsync(string foodName);
 
-    Task<int> Register(Food food);
+    Task<int> Register(Food? food);
+
+    FoodDto AsDto(Food? food);
+
+    Task<int> Delete(int id);
+
+    IReadOnlyList<FoodDto> AsDtoList(IReadOnlyList<Food> foods);
+
+    Task<int> Update(Food food);
+
 }

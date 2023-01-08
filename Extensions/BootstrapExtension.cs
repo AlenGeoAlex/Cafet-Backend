@@ -1,9 +1,14 @@
-﻿using Cafet_Backend.Configuration;
+﻿using System.Collections.Immutable;
+using Cafet_Backend.Configuration;
 using Cafet_Backend.Context;
+using Cafet_Backend.Dto.Errors;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Manager;
+using Cafet_Backend.Provider;
 using Cafet_Backend.Repository;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cafet_Backend.Extensions;
@@ -22,12 +27,32 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         applicationBuilder.Services.AddScoped<IFoodRepository, FoodRepository>();
         applicationBuilder.Services.AddSingleton(typeof(ImageProviderManager));
+        applicationBuilder.Services.AddAutoMapper(typeof(MapProvider));
         applicationBuilder.Services.Configure<FormOptions>(o =>
         {
             o.ValueLengthLimit = int.MaxValue;
             o.MultipartBodyLengthLimit = int.MaxValue;
             o.MemoryBufferThreshold = int.MaxValue;
         });
+        applicationBuilder.Services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                ModelStateDictionary modelStateDictionary = context.ModelState;
+
+                var errors = modelStateDictionary
+                    .Where(e => e.Value.Errors.Count > 0)
+                    .SelectMany(x => x.Value.Errors)
+                    .Select(x => x.ErrorMessage)
+                    .ToImmutableList();
+                var errorResponse = new ApiValidationErrorResponse()
+                {
+                    Errors = errors,
+                };
+                return new BadRequestObjectResult(errorResponse);
+            };
+        });
+        
         return applicationBuilder;
     }
 

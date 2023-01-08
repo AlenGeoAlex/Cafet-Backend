@@ -13,7 +13,7 @@ public class CafeContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Cart> Carts { get; set; }
     public DbSet<FoodCategory?> Categories { get; set; }
-    public DbSet<Food> Foods { get; set; }
+    public DbSet<Food?> Foods { get; set; }
 
     public CafeContext(DbContextOptions<CafeContext> options) : base(options)
     {

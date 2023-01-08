@@ -26,8 +26,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(Constants.CorsPolicyName);
+app.UseStaticFiles();
 app.UseHttpsRedirection();
-
+app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllers();

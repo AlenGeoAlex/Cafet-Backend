@@ -5,9 +5,10 @@ namespace Cafet_Backend.Manager;
 public class ImageProviderManager
 {
     public readonly FoodImageProvider FoodImageProvider;
-
-    public ImageProviderManager()
+    public readonly IWebHostEnvironment? WebHostEnvironment;
+    public ImageProviderManager(IWebHostEnvironment webHostEnvironment)
     {
-        this.FoodImageProvider = new FoodImageProvider();
+        this.WebHostEnvironment = WebHostEnvironment;
+        this.FoodImageProvider = new FoodImageProvider(webHostEnvironment);
     }
 }
