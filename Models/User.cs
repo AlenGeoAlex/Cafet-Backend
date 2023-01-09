@@ -12,8 +12,7 @@ public class User : KeyedEntity
         LastName = "Admin",
         CartId = Models.Cart.DummyCart.CartId,
         EmailAddress = "adminstrator@cafet.com",
-        RoleId = Models.Role.Administrator.Id,
-        Password = "cafet-admin",
+        RoleId = Models.Role.Administrator.Id, 
         WalletBalance = 0.0,
         ProfileImage = "default.png",
         Activated = true,
@@ -28,13 +27,15 @@ public class User : KeyedEntity
         get => FirstName + " " + LastName;
     }
     
+    
     [MaxLength(40)] [Required] public string EmailAddress { get; set; }
     
-    [Required] public string Password { get; set; }
+    [Required] public byte[] PasswordHash { get; set; }
+    
+    [Required] public byte[] UserSalt { get; set; }
     
     [ForeignKey("RoleId")]
     public Role Role { get; set; }
-    
     [Required] public int RoleId { get; set; }
 
     [Column(TypeName = "Smallmoney")]

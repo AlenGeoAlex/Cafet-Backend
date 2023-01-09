@@ -19,6 +19,7 @@ public class FoodUrlResolver : IValueResolver<Food, FoodDto, string>
         if (string.IsNullOrEmpty(source.FoodImage))
             return null;
 
+        
         return $"{Config["apiUrl"]}_images/_food/{source.FoodImage}";
     }
 }

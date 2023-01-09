@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Text;
 using Cafet_Backend.Configuration;
 using Cafet_Backend.Context;
 using Cafet_Backend.Dto.Errors;
@@ -6,10 +7,12 @@ using Cafet_Backend.Interfaces;
 using Cafet_Backend.Manager;
 using Cafet_Backend.Provider;
 using Cafet_Backend.Repository;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Cafet_Backend.Extensions;
 
@@ -27,9 +30,10 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddScoped<IRoleRepository, RoleRepository>();
         applicationBuilder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         applicationBuilder.Services.AddScoped<IFoodRepository, FoodRepository>();
-        applicationBuilder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
+        applicationBuilder.Services.AddScoped<IUserRepository, UserRepository>();
         applicationBuilder.Services.AddSingleton(typeof(ImageProviderManager));
         applicationBuilder.Services.AddAutoMapper(typeof(MapProvider));
+        applicationBuilder.Services.AddSingleton(typeof(TokenService));
         applicationBuilder.Services.Configure<FormOptions>(o =>
         {
             o.ValueLengthLimit = int.MaxValue;
@@ -62,6 +66,11 @@ public static class BootstrapExtension
     {
         applicationBuilder.Services.Configure<CorsOrigins>(options =>
             applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options));
+
+        applicationBuilder.Services.Configure<JwtConfig>(options =>
+        {
+            applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options);
+        });
         return applicationBuilder;
     }
     
@@ -92,6 +101,25 @@ public static class BootstrapExtension
         });
         
         Console.WriteLine($"Added {possibleNewEndPoints.Count} endpoints as Cors Origins");
+        return applicationBuilder;
+    }
+
+    public static WebApplicationBuilder ConfigureAuthentication(this WebApplicationBuilder applicationBuilder)
+    {
+        JwtConfig options = new JwtConfig();
+        applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options);
+        applicationBuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(bearerOptions =>
+            {
+                bearerOptions.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateIssuerSigningKey = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Token))
+                };
+            });
         return applicationBuilder;
     }
 }

@@ -26,6 +26,21 @@ public class Role : KeyedEntity
         RoleDescription = "This role defines the customer."
     };
     
+    public static Role? GetByName(string roleName)
+    {
+        
+        switch (roleName.ToUpper())
+        {
+            case "ADMIN":
+                return Role.Administrator;
+            case "STAFF":
+                return Role.CafetStaff;
+            case "CUSTOMER":
+                return Role.Customer;
+            default: return null;
+        }
+    }
+    
     [MaxLength(30)] public string RoleName { get; set; }
     public string RoleDescription { get; set; }
 

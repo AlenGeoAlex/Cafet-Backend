@@ -76,7 +76,7 @@ public class CafeContext : DbContext
          
          
                  //Adding Default Administrator
-                 userBuilder.HasData(User.DefaultAdmin);
+                 //userBuilder.HasData(User.DefaultAdmin);
         }
         catch (Exception e)
         {
