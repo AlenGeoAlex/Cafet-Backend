@@ -8,6 +8,8 @@ using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
 using Cafet_Backend.Provider;
 using Cafet_Backend.QueryParams;
+using JwtUtils.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Newtonsoft.Json;
@@ -21,11 +23,13 @@ public class AuthController : AbstractController
     private readonly TokenService TokenService;
     private readonly IRoleRepository roleRepository;
     private readonly IMapper mapper;
-    public AuthController(IUserRepository userRepository, IRoleRepository roleRepository, TokenService tokenService, IMapper mapper)
+    private readonly AbstractRefreshTokenManager RefreshTokenManager;
+    public AuthController(IUserRepository userRepository, IRoleRepository roleRepository, TokenService tokenService, IMapper mapper, AbstractRefreshTokenManager tokenManager)
     {
         _userRepository = userRepository;
         this.TokenService = tokenService;
         this.roleRepository = roleRepository;
+        this.RefreshTokenManager = tokenManager;
         this.mapper = mapper;
     }
 
@@ -66,12 +70,15 @@ public class AuthController : AbstractController
         List<Claim> claims = new List<Claim>()
         {
             new Claim(JwtRegisteredClaimNames.NameId, userOfEmail.Id.ToString()),
+            new Claim("role", userOfEmail.Role.RoleName),
         };
 
         string userToken = TokenService.CreateToken(claims);
-
+        string refreshToken = await RefreshTokenManager.GenerateAndStoreRefreshToken(userOfEmail.Id);
+        
         UserDto userDto = mapper.Map<User, UserDto>(userOfEmail);
         userDto.AccessToken = userToken;
+        userDto.RefreshToken = refreshToken;
 
         return Ok(userDto);
     }
@@ -130,15 +137,20 @@ public class AuthController : AbstractController
         {
             return BadRequest("Failed to register the user");
         }
+        
         List<Claim> claims = new List<Claim>()
         {
             new Claim(JwtRegisteredClaimNames.NameId, userOfEmail.Id.ToString()),
+            new Claim("role", userOfEmail.Role.RoleName),
+
         };
 
         string userToken = TokenService.CreateToken(claims);
+        string refreshToken = await RefreshTokenManager.GenerateAndStoreRefreshToken(userOfEmail.Id);
 
         UserDto userDto = mapper.Map<User, UserDto>(userOfEmail);
         userDto.AccessToken = userToken;
+        userDto.RefreshToken = refreshToken;
 
         return Created("/user/"+userOfEmail.Id,JsonConvert.SerializeObject(userDto));
     }

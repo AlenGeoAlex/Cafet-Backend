@@ -66,7 +66,11 @@ public class CafeContext : DbContext
                      .Property(u => u.ProfileImage)
                      .IsRequired()
                      .HasDefaultValue("default.png");
-         
+
+                 userBuilder
+                     .HasIndex(u => u.EmailAddress)
+                     .IsUnique();
+
                  var foodBuilder = modelBuilder.Entity<Food>();
          
                  foodBuilder

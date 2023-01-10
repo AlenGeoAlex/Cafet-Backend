@@ -1,42 +1,46 @@
 ﻿namespace Cafet_Backend.Helper.Cache;
 
-public class CachedDictionary<K, V>
+public class CachedDictionary<TKey, TValue> where TKey : notnull
 {
-    private readonly Dictionary<K, Cache<V>> Caches;
+    private readonly Dictionary<TKey, Cache<TValue>> Caches;
     public readonly int TTLHours;
     public CachedDictionary(int ttl)
     {
         this.TTLHours = ttl;
-        this.Caches = new Dictionary<K, Cache<V>>();
+        this.Caches = new Dictionary<TKey, Cache<TValue>>();
     }
 
     public CachedDictionary()
     {
         this.TTLHours = 2;
-        this.Caches = new Dictionary<K, Cache<V>>();
+        this.Caches = new Dictionary<TKey, Cache<TValue>>();
     }
 
-    public V? Get(K key)
+    public TValue? Get(TKey key)
     {
-        Cache<V> cache = Caches[key];
-        if (cache == null)
-            return default;
-
-        if (cache.TimeStamp > DateTime.Now)
+        Cache<TValue> value;
+        if (Caches.TryGetValue(key, out value))
         {
-            Caches.Remove(key);
+            if (value.TimeStamp > DateTime.Now)
+            {
+                Caches.Remove(key);
+                return default;
+            }
+
+            return value.Item;
+        }
+        else
+        {
             return default;
         }
-
-        return cache.Item;
     }
 
-    public void Set(K key, V value)
+    public void Set(TKey key, TValue value)
     {
-        this.Caches.Add(key, new Cache<V>(value));
+        this.Caches.Add(key, new Cache<TValue>(value, DateTime.Now.AddHours(TTLHours)));
     }
 
-    public bool Has(K key)
+    public bool Has(TKey key)
     {
         return Caches.ContainsKey(key);
     }
@@ -47,11 +51,10 @@ class Cache<V>
 {
     public readonly V Item;
     public readonly DateTime TimeStamp;
-
-    public Cache(V value)
+    
+    public Cache(V item, DateTime timeStamp)
     {
-        this.Item = value;
-        this.TimeStamp = DateTime.Now;
-        
+        Item = item;
+        TimeStamp = timeStamp;
     }
 }

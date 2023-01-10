@@ -1,11 +1,13 @@
 ﻿using System.Collections.Immutable;
 using System.Text;
+using Cafet_Backend.Abstracts;
 using Cafet_Backend.Configuration;
 using Cafet_Backend.Context;
 using Cafet_Backend.Dto.Errors;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Manager;
 using Cafet_Backend.Provider;
+using Cafet_Backend.Provider.RTProvider;
 using Cafet_Backend.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
@@ -20,6 +22,9 @@ public static class BootstrapExtension
 {
     public static WebApplicationBuilder InitServices(this WebApplicationBuilder applicationBuilder)
     {
+        JwtConfig options = new JwtConfig();
+        applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options);
+        
         applicationBuilder.Services.AddDbContext<CafeContext>(builderOptions =>
         {
             builderOptions.EnableSensitiveDataLogging(true);
@@ -34,6 +39,16 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddSingleton(typeof(ImageProviderManager));
         applicationBuilder.Services.AddAutoMapper(typeof(MapProvider));
         applicationBuilder.Services.AddSingleton(typeof(TokenService));
+
+        if (options.RefreshTokenSettings.CacheMethod == "MEMORY")
+        {
+            applicationBuilder.Services.AddScoped<AbstractRefreshTokenManager, InMemoryProvider>();
+        }
+        else
+        {
+            Console.WriteLine("Failed to register RefreshToken Provider");
+        }
+        
         applicationBuilder.Services.Configure<FormOptions>(o =>
         {
             o.ValueLengthLimit = int.MaxValue;
@@ -71,6 +86,7 @@ public static class BootstrapExtension
         {
             applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options);
         });
+        
         return applicationBuilder;
     }
     
@@ -111,14 +127,16 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(bearerOptions =>
             {
+                
                 bearerOptions.TokenValidationParameters = new TokenValidationParameters()
                 {
                     ValidateIssuerSigningKey = true,
-                    ValidateIssuer = true,
+                    ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateLifetime = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Token))
                 };
+                
             });
         return applicationBuilder;
     }

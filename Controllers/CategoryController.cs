@@ -3,6 +3,7 @@ using Cafet_Backend.Dto.Errors;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
 using Cafet_Backend.QueryParams;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cafet_Backend.Controllers;
@@ -50,6 +51,7 @@ public class CategoryController : AbstractController
         return NotFound(new ApiException(404, "The category is unknown", $"The category with name {name} is unknown to the system"));
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost("new")]
     [ProducesResponseType(200)]
     [ProducesResponseType(typeof(ApiResponse), 406)]
@@ -69,6 +71,7 @@ public class CategoryController : AbstractController
         return Ok();
     }
     
+    [Authorize(Roles = "Admin")]
     [HttpPost("update")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> Update([FromBody] CategoryUpdateParams categoryParams)
@@ -82,7 +85,8 @@ public class CategoryController : AbstractController
         await CategoryRepository.UpdateAsync(foodCategory);
         return Ok();
     }
-
+    
+    [Authorize(Roles = "Admin")]
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> Delete(int id)
     {

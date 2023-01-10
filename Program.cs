@@ -1,6 +1,7 @@
 using System.Reflection;
 using Cafet_Backend;
 using Cafet_Backend.Extensions;
+using Cafet_Backend.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,13 +25,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseMiddleware<JwtMiddleware>();
 
 app.UseCors(Constants.CorsPolicyName);
-app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseStatusCodePages();
+app.UseStaticFiles();
+
 app.MapControllers();
 
 app.Run();

@@ -25,9 +25,11 @@ public class TokenService
         {
             Subject = new ClaimsIdentity(claimList),
             Expires = DateTime.Now.AddHours(JwtConfig.Value.AccessTokenLifeTimeHours),
+            Issuer = JwtConfig.Value.Issuer,
             SigningCredentials = signingCredentials
         };
 
+        
         JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
         SecurityToken securityToken = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(securityToken);

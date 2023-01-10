@@ -35,7 +35,7 @@ public class UserRepository : IUserRepository
         return CafeContext.Users
             .Include(u => u.Cart )
             .Include(u => u.Role)
-            .FirstOrDefaultAsync(user => user.EmailAddress.ToLower() == emailAddress);
+            .FirstOrDefaultAsync(user => user.EmailAddress == emailAddress);
     }
 
     public async Task<int> Update(User user)
@@ -46,7 +46,7 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> Exists(string email)
     {
-        return await CafeContext.Users.AnyAsync(user => user.EmailAddress.ToLower() == email.ToLower());
+        return await CafeContext.Users.AnyAsync(user => user.EmailAddress == email);
     }
     
 }

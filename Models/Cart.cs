@@ -8,7 +8,7 @@ public class Cart
 
     public static readonly Cart DummyCart = new Cart()
     {
-        CartId = Guid.NewGuid(),
+        
         CartData = new Dictionary<int, int>(),
         LastUpdated = DateTime.Now,
     };

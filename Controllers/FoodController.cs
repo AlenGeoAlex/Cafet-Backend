@@ -57,7 +57,7 @@ public class FoodController : AbstractController
     [ProducesResponseType(200)]
     [ProducesResponseType(typeof(ApiResponse), 406)]
     public async Task<IActionResult> Update()
-    {
+    {   
         IFormCollection readFormAsync = await Request.ReadFormAsync();
         int FoodId = Convert.ToInt32(readFormAsync["FoodId"]);
 
