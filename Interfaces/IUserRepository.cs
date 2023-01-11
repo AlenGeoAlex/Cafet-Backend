@@ -1,4 +1,6 @@
-﻿using Cafet_Backend.Models;
+﻿using Cafet_Backend.Dto;
+using Cafet_Backend.Models;
+using Cafet_Backend.QueryParams;
 
 namespace Cafet_Backend.Interfaces;
 
@@ -13,5 +15,11 @@ public interface IUserRepository
     Task<int> Update(User user);
 
     Task<bool> Exists(string email);
-    
+
+    Task<List<User>> GetAllUser();
+
+    Task<User> ResetPassword();
+
+    Task<User?> TryRegister(RegistrationParam param);
+
 }

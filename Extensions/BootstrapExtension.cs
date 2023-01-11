@@ -4,6 +4,7 @@ using Cafet_Backend.Abstracts;
 using Cafet_Backend.Configuration;
 using Cafet_Backend.Context;
 using Cafet_Backend.Dto.Errors;
+using Cafet_Backend.Helper;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Manager;
 using Cafet_Backend.Provider;
@@ -39,7 +40,9 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddSingleton(typeof(ImageProviderManager));
         applicationBuilder.Services.AddAutoMapper(typeof(MapProvider));
         applicationBuilder.Services.AddSingleton(typeof(TokenService));
-
+        applicationBuilder.Services.AddSingleton(typeof(MailModelManager));
+        applicationBuilder.Services.AddSingleton<IMailService, MailService>();
+        
         if (options.RefreshTokenSettings.CacheMethod == "MEMORY")
         {
             applicationBuilder.Services.AddScoped<AbstractRefreshTokenManager, InMemoryProvider>();
@@ -83,6 +86,11 @@ public static class BootstrapExtension
             applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options));
 
         applicationBuilder.Services.Configure<JwtConfig>(options =>
+        {
+            applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options);
+        });
+
+        applicationBuilder.Services.Configure<MailConfiguration>(options =>
         {
             applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options);
         });

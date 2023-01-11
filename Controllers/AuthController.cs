@@ -36,7 +36,7 @@ public class AuthController : AbstractController
     [HttpPost("login/")]
     [ProducesResponseType(typeof(BadRequestObjectResult), 400)]
     [ProducesResponseType(typeof(UnauthorizedObjectResult), 401)]
-    [ProducesResponseType(typeof(UserDto), 200)]
+    [ProducesResponseType(typeof(CredentialsDto), 200)]
     public async Task<IActionResult> Login([FromBody] LoginParams loginParams)
     {
         string emailAddress = loginParams.EmailAddress;
@@ -45,6 +45,7 @@ public class AuthController : AbstractController
         {
             return BadRequest("No email address provided!");
         }
+        
         
         User? userOfEmail = await _userRepository.GetUserOfEmail(emailAddress);
         if (userOfEmail == null)
@@ -76,16 +77,16 @@ public class AuthController : AbstractController
         string userToken = TokenService.CreateToken(claims);
         string refreshToken = await RefreshTokenManager.GenerateAndStoreRefreshToken(userOfEmail.Id);
         
-        UserDto userDto = mapper.Map<User, UserDto>(userOfEmail);
-        userDto.AccessToken = userToken;
-        userDto.RefreshToken = refreshToken;
+        CredentialsDto credentialsDto = mapper.Map<User, CredentialsDto>(userOfEmail);
+        credentialsDto.AccessToken = userToken;
+        credentialsDto.RefreshToken = refreshToken;
 
-        return Ok(userDto);
+        return Ok(credentialsDto);
     }
 
     [HttpPost("register/")]
     [ProducesResponseType(typeof(BadRequestObjectResult), 400)]
-    [ProducesResponseType(typeof(UserDto), 201)]
+    [ProducesResponseType(typeof(CredentialsDto), 201)]
     public async Task<IActionResult> Register([FromBody] RegistrationParam param)
     {
         
@@ -94,44 +95,18 @@ public class AuthController : AbstractController
         {
             return BadRequest("This user name is already taken");
         }
-
-        HMACSHA512 hasher = new HMACSHA512();
-
-        byte[] salt = hasher.Key;
-        byte[] passwordHash = hasher.ComputeHash(Encoding.UTF8.GetBytes(param.Password));
-
-        Cart cart = new Cart();
         
-        
-        Role? roleByName = Role.GetByName(param.Role);
-        if (roleByName == null)
+        User? user = await _userRepository.TryRegister(param);
+        if(user == null)
         {
-            return BadRequest("This user role is unknown");
+            return BadRequest("Failed to generate the user");
         }
-
-        Role? roleData = await roleRepository.GetRoleByNameAsync(roleByName.RoleName);
-        if (roleData == null)
-        {
-            return BadRequest("This user role is unknown");
-        }
-        
-        User user = new User()
-        {
-            EmailAddress = param.EmailAddress,
-            FirstName = param.FirstName,
-            LastName = param.LastName,
-            Cart = cart,
-            CartId = cart.CartId,
-            RoleId = roleData.Id,
-            Activated = true,
-            Deleted = false,
-            PasswordHash = passwordHash,
-            UserSalt = salt,
-            ProfileImage = "default.png",
-            WalletBalance = 0.0,
-        };
 
         await _userRepository.Register(user);
+        if (string.IsNullOrEmpty(param.Password))
+        {
+            return Ok();
+        }
         User? userOfEmail = await _userRepository.GetUserOfEmail(user.EmailAddress);
         if (userOfEmail == null)
         {
@@ -148,10 +123,10 @@ public class AuthController : AbstractController
         string userToken = TokenService.CreateToken(claims);
         string refreshToken = await RefreshTokenManager.GenerateAndStoreRefreshToken(userOfEmail.Id);
 
-        UserDto userDto = mapper.Map<User, UserDto>(userOfEmail);
-        userDto.AccessToken = userToken;
-        userDto.RefreshToken = refreshToken;
+        CredentialsDto credentialsDto = mapper.Map<User, CredentialsDto>(userOfEmail);
+        credentialsDto.AccessToken = userToken;
+        credentialsDto.RefreshToken = refreshToken;
 
-        return Created("/user/"+userOfEmail.Id,JsonConvert.SerializeObject(userDto));
+        return Created("/user/"+userOfEmail.Id,JsonConvert.SerializeObject(credentialsDto));
     }
 }

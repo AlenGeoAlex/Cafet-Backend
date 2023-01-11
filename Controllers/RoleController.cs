@@ -3,8 +3,9 @@ using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
 using Cafet_Backend.Repository;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
-namespace Cafet_Backend.Controllers;
+namespace Cafet_Backend.Controllers;    
 
 public class RoleController : AbstractController
 {
@@ -16,7 +17,7 @@ public class RoleController : AbstractController
         RoleRepository = roleRepository;
     }
 
-    [HttpGet("roles")]
+    [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         IReadOnlyList<Role> readOnlyList = await RoleRepository.GetRolesAsync();
@@ -25,24 +26,29 @@ public class RoleController : AbstractController
     
     
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(Role), 200)]
+    [ProducesResponseType(typeof(NotFoundObjectResult), 404)]
     public async Task<IActionResult> GetAll(int id)
     {
         Role? roleByIdAsync = await RoleRepository.GetRoleByIdAsync(id);
-        if (roleByIdAsync != null)
-            Ok(roleByIdAsync);
+        Console.WriteLine(JsonConvert.SerializeObject(roleByIdAsync));
+        if (roleByIdAsync == null)
+            NotFound();
         
         
-        return NotFound(roleByIdAsync);
+        return Ok();
     }
     
     [HttpGet("name/{name}")]
+    [ProducesResponseType(typeof(Role), 200)]
+    [ProducesResponseType(typeof(NotFoundObjectResult), 404)]
     public async Task<IActionResult> GetAll(string name)
     {
         Role? roleByIdAsync = await RoleRepository.GetRoleByNameAsync(name);
-        if (roleByIdAsync != null)
-            Ok(roleByIdAsync);
+        if (roleByIdAsync == null)
+            NotFound();
         
         
-        return NotFound(roleByIdAsync);
+        return Ok();
     }
 }
