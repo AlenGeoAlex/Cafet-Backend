@@ -3,6 +3,7 @@ using Cafet_Backend.Dto;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace Cafet_Backend.Repository;
 
@@ -39,7 +40,7 @@ public class CartRepository : ICartRepository
         if (cardById == null)
             return false;
         
-        cardById.CartData.Clear();
+        cardById.FoodCartData.Clear();
         CafeContext.Carts.Update(cardById);
         await SaveAsync();
         return true;

@@ -8,16 +8,15 @@ public class Cart
 
     public static readonly Cart DummyCart = new Cart()
     {
-        
-        CartData = new Dictionary<int, int>(),
+        FoodCartData        = new List<UserCartData>(),
         LastUpdated = DateTime.Now,
     };
 
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid CartId { get; set; } = Guid.NewGuid();
-
-    public Dictionary<int, int> CartData { get; set; } = new Dictionary<int, int>();
+    
+    public List<UserCartData> FoodCartData { get; set; }
     
     [Column(TypeName = "Datetime2")]
     public DateTime LastUpdated { get; set; } = DateTime.Now;

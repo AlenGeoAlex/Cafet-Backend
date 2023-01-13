@@ -17,7 +17,7 @@ public class MapProvider : Profile
             .ForMember(dto => dto.FoodImage, food => food.MapFrom<FoodUrlResolver>());
 
         CreateMap<User, CredentialsDto>()
-            .ForMember(dto => dto.CartData, o => o.MapFrom(user => JsonConvert.SerializeObject(user.Cart.CartData)))
+            .ForMember(dto => dto.CartData, o => o.MapFrom(user => JsonConvert.SerializeObject(user.Cart.FoodCartData)))
             .ForMember(dto => dto.UserEmailAddress, o => o.MapFrom(user => user.EmailAddress))
             .ForMember(dto => dto.UserFullName, o => o.MapFrom(user => user.FullName))
             .ForMember(dto => dto.UserRole, o => o.MapFrom(user => user.Role.RoleName))

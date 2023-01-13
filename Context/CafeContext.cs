@@ -29,25 +29,14 @@ public class CafeContext : DbContext
 
             EntityTypeBuilder<DailyStock> stockBui = modelBuilder.Entity<DailyStock>();
             
-            
 
             EntityTypeBuilder<Role> roleBuilder = modelBuilder.Entity<Role>();
             //Adding Default Roles
                  roleBuilder.HasData(Role.Administrator);
                  roleBuilder.HasData(Role.CafetStaff);
                  roleBuilder.HasData(Role.Customer);
-         
-                 var cartBuilder = modelBuilder.Entity<Cart>();
-                 cartBuilder.Property(entity => entity.CartData)
-                     .IsRequired()
-                     .HasConversion(
-                         outp => (outp == null) ? JsonConvert.SerializeObject(new Dictionary<int, int>()) : JsonConvert.SerializeObject(outp),
-                         input => JsonConvert.DeserializeObject<Dictionary<int, int>>(input) ?? new Dictionary<int, int>()
-                     );
 
-                 cartBuilder.HasData(Cart.DummyCart);
-         
-         
+
                  //Configuring Users
                  var userBuilder = modelBuilder.Entity<User>();
                  userBuilder
