@@ -14,6 +14,7 @@ public abstract class AbstractImageProvider
                              $"{Path.DirectorySeparatorChar}" +
                              $"_images" +
                              $"{Path.DirectorySeparatorChar}";
+        
         Console.WriteLine(BaseImageDirectory);
         ProviderName = providerName;
         

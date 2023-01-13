@@ -3,6 +3,7 @@ using Cafet_Backend.Dto;
 using Cafet_Backend.Helper;
 using Cafet_Backend.Models;
 using Cafet_Backend.Provider.Image;
+using Newtonsoft.Json;
 
 namespace Cafet_Backend.Provider;
 
@@ -16,6 +17,7 @@ public class MapProvider : Profile
             .ForMember(dto => dto.FoodImage, food => food.MapFrom<FoodUrlResolver>());
 
         CreateMap<User, CredentialsDto>()
+            .ForMember(dto => dto.CartData, o => o.MapFrom(user => JsonConvert.SerializeObject(user.Cart.CartData)))
             .ForMember(dto => dto.UserEmailAddress, o => o.MapFrom(user => user.EmailAddress))
             .ForMember(dto => dto.UserFullName, o => o.MapFrom(user => user.FullName))
             .ForMember(dto => dto.UserRole, o => o.MapFrom(user => user.Role.RoleName))
@@ -33,9 +35,10 @@ public class MapProvider : Profile
             .ForMember(dto => dto.WalletBalance, o => o.MapFrom(user => user.WalletBalance))
             .ForMember(dto => dto.Activated, o => o.MapFrom(user => user.Activated))
             .ForMember(dto => dto.Deleted, o => o.MapFrom(user => user.Deleted));
+            
+        
 
-
-
+        
 
     }
 }

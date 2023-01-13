@@ -9,4 +9,6 @@ public class CredentialsDto
     public string RefreshToken { get; set; }
     public string ImageLink { get; set; }
     public string CartId { get; set; }
+    
+    public string CartData { get; set; }
 }

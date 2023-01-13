@@ -11,8 +11,10 @@ public class CafeContext : DbContext
     public DbSet<Role> Roles { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Cart> Carts { get; set; }
-    public DbSet<FoodCategory?> Categories { get; set; }
-    public DbSet<Food?> Foods { get; set; }
+    public DbSet<FoodCategory> Categories { get; set; }
+    public DbSet<Food> Foods { get; set; }
+    
+    public DbSet<DailyStock> Stocks { get; set; }
 
     public CafeContext(DbContextOptions<CafeContext> options) : base(options)
     {
@@ -22,7 +24,13 @@ public class CafeContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         try
-        {        base.OnModelCreating(modelBuilder);
+        {        
+            base.OnModelCreating(modelBuilder);
+
+            EntityTypeBuilder<DailyStock> stockBui = modelBuilder.Entity<DailyStock>();
+            
+            
+
             EntityTypeBuilder<Role> roleBuilder = modelBuilder.Entity<Role>();
             //Adding Default Roles
                  roleBuilder.HasData(Role.Administrator);

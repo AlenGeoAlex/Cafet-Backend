@@ -4,5 +4,5 @@ namespace Cafet_Backend.Interfaces;
 
 public interface IMailService
 {
-    Task SendMailAsync(MailModel? model, string[] param);
+    Task<bool> SendMailAsync(MailModel? model, string emailAddress, string[] param);
 }

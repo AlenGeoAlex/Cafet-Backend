@@ -17,9 +17,15 @@ public interface IUserRepository
     Task<bool> Exists(string email);
 
     Task<List<User>> GetAllUser();
+    
+    Task<List<User>> GetActiveUsers();
 
-    Task<User> ResetPassword();
+    Task<bool> DeleteUser(int id);
+
+    Task<User?> ResetPassword(int id);
 
     Task<User?> TryRegister(RegistrationParam param);
+
+    Task SaveAsync();
 
 }

@@ -16,13 +16,15 @@ public class UserRepository : IUserRepository
     private readonly CafeContext CafeContext;
     private readonly MailModelManager modelManager;
     private readonly IMailService mailService;
+    private readonly ICartRepository CartRepository;
     internal static readonly char[] chars =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray(); 
-    public UserRepository(CafeContext cafeContext, MailModelManager modelManager, IMailService mailService)
+    public UserRepository(CafeContext cafeContext, MailModelManager modelManager, IMailService mailService, ICartRepository cartRepository)
     {
         CafeContext = cafeContext;
         this.modelManager = modelManager;
         this.mailService = mailService;
+        this.CartRepository = cartRepository;
     }
 
     public async Task<User?> GetUserOfId(int id)
@@ -66,9 +68,45 @@ public class UserRepository : IUserRepository
             .ToListAsync();
     }
 
-    public Task<User> ResetPassword()
+    public async Task<List<User>> GetActiveUsers()
     {
-        throw new NotImplementedException();
+        return await CafeContext.Users
+            .Where(u => !u.Deleted)
+            .Include(user => user.Role)
+            .ToListAsync();    }
+
+    public async Task<bool> DeleteUser(int id)
+    {
+        User? userOfId = await GetUserOfId(id);
+
+        if (userOfId == null)
+            return false;
+
+        await CartRepository.ClearCart(userOfId.CartId);
+        userOfId.Deleted = true;
+        return true;
+    }
+
+    public async Task<User?> ResetPassword(int id)
+    {
+        User? userOfId = await GetUserOfId(id);
+        if (userOfId == null)
+            return null;
+        
+        HMACSHA512 hasher = new HMACSHA512();
+        string password = GetUniqueKey(10);
+        byte[] salt = hasher.Key;
+        byte[] passwordHash = hasher.ComputeHash(Encoding.UTF8.GetBytes(password));
+
+        userOfId.PasswordHash = passwordHash;
+        userOfId.UserSalt = salt;
+
+        CafeContext.Update(userOfId);
+        await CafeContext.SaveChangesAsync();
+
+        await mailService.SendMailAsync(modelManager.PasswordResetMailModel, userOfId.EmailAddress ,new[] { password });
+        
+        return userOfId;
     }
 
     public async Task<User?> TryRegister(RegistrationParam param)
@@ -114,10 +152,16 @@ public class UserRepository : IUserRepository
 
         if (shouldGenPassword)
         {
-            await mailService.SendMailAsync(modelManager.PasswordResetMailModel, new[] { password });
+            await mailService.SendMailAsync(modelManager.PasswordResetMailModel, user.EmailAddress, new[] { password });
         }
         
         return user;
+    }
+
+    public async Task SaveAsync()
+    {
+        await CafeContext.SaveChangesAsync();
+        return;
     }
     
     public static string GetUniqueKey(int size)

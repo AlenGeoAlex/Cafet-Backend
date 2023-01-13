@@ -37,11 +37,12 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         applicationBuilder.Services.AddScoped<IFoodRepository, FoodRepository>();
         applicationBuilder.Services.AddScoped<IUserRepository, UserRepository>();
+        applicationBuilder.Services.AddScoped<ICartRepository, CartRepository>();
         applicationBuilder.Services.AddSingleton(typeof(ImageProviderManager));
         applicationBuilder.Services.AddAutoMapper(typeof(MapProvider));
         applicationBuilder.Services.AddSingleton(typeof(TokenService));
         applicationBuilder.Services.AddSingleton(typeof(MailModelManager));
-        applicationBuilder.Services.AddSingleton<IMailService, MailService>();
+        applicationBuilder.Services.AddScoped<IMailService, MailService>();
         
         if (options.RefreshTokenSettings.CacheMethod == "MEMORY")
         {
