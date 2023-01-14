@@ -35,10 +35,18 @@ public class MapProvider : Profile
             .ForMember(dto => dto.WalletBalance, o => o.MapFrom(user => user.WalletBalance))
             .ForMember(dto => dto.Activated, o => o.MapFrom(user => user.Activated))
             .ForMember(dto => dto.Deleted, o => o.MapFrom(user => user.Deleted));
-            
-        
 
-        
+
+        CreateMap<DailyStock, DailyStockDto>()
+            .ForMember(dto => dto.FoodImage, o => o.MapFrom<DailyStockImageUrlResolver>())
+            .ForMember(dto => dto.FoodId, o => o.MapFrom(ds => ds.Food.Id))
+            .ForMember(dto => dto.FoodCategory, o => o.MapFrom(ds => ds.Food.Category.CategoryName))
+            .ForMember(dto => dto.FoodName, o => o.MapFrom(ds => ds.Food.Name))
+            .ForMember(dto => dto.StockId, o => o.MapFrom(ds => ds.Id))
+            .ForMember(dto => dto.CurrentInStock, o => o.MapFrom(ds => ds.CurrentStock))
+            .ForMember(dto => dto.TotalInStock, o => o.MapFrom(ds => ds.FoodStock));
+
+
 
     }
 }

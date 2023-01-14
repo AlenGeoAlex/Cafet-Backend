@@ -38,6 +38,7 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddScoped<IFoodRepository, FoodRepository>();
         applicationBuilder.Services.AddScoped<IUserRepository, UserRepository>();
         applicationBuilder.Services.AddScoped<ICartRepository, CartRepository>();
+        applicationBuilder.Services.AddScoped<IStockRepository, StockRepository>();
         applicationBuilder.Services.AddSingleton(typeof(ImageProviderManager));
         applicationBuilder.Services.AddAutoMapper(typeof(MapProvider));
         applicationBuilder.Services.AddSingleton(typeof(TokenService));
