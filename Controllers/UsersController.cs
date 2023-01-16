@@ -12,6 +12,7 @@ namespace Cafet_Backend.Controllers;
 public class UsersController : AbstractController
 {
 
+
     private readonly IUserRepository UserRepository;
     private readonly IMapper Mapper;
 
@@ -79,4 +80,6 @@ public class UsersController : AbstractController
         }
         return dtoList;
     }
+
+
 }

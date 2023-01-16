@@ -28,6 +28,26 @@ public class StockController : AbstractController
         return Ok(StockRepository.AsDto(allStockAsync));
     }
 
+    [HttpGet("{id}")]
+    public async Task<ActionResult<DailyStockDto>> GetStockOfId(int id)
+    {
+        DailyStock? stock = await StockRepository.GetStockOfId(id);
+        if (stock == null)
+            return NoContent();
+
+        return StockRepository.AsDto(stock);
+    }
+    
+    [HttpGet("food/{id}")]
+    public async Task<ActionResult<DailyStockDto>> GetStockOfFoodId(int id)
+    {
+        DailyStock? stock = await StockRepository.GetStockOfFoodId(id);
+        if (stock == null)
+            return NoContent();
+
+        return StockRepository.AsDto(stock);
+    }
+
     [HttpPost("register")]
     [ProducesResponseType(typeof(UnprocessableEntityObjectResult), 422)]
     [ProducesResponseType(typeof(OkObjectResult), 200)]
@@ -82,5 +102,11 @@ public class StockController : AbstractController
         if (deleted)
             return Ok();
         else return NoContent();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Update([FromBody] DailyStockDto dailyStockDto)
+    {
+        return null;
     }
 }

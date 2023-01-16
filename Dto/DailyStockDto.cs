@@ -9,4 +9,6 @@ public class DailyStockDto
     public string FoodCategory { get; set; }
     public long TotalInStock { get; set; }
     public long CurrentInStock { get; set; }
+
+    public double FoodPrice { get; set; }
 }

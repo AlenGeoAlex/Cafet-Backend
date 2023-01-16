@@ -158,11 +158,41 @@ public class UserRepository : IUserRepository
         return user;
     }
 
+    public async Task<List<EmailQueryDto>> GetEmailAddress(string emailSearch)
+    {
+        return await CafeContext.Users
+            .Where(user => user.EmailAddress.Contains(emailSearch))
+            .Select(user => new EmailQueryDto()
+            {
+                FirstName = user.FirstName,
+                EmailAddress = user.EmailAddress,
+                LastName = user.LastName,
+                Wallet = user.WalletBalance
+            })
+            .ToListAsync();
+    }
+    
+    public async Task<EmailQueryDto?> GetUserOfEmailAddress(string emailSearch)
+    {
+        return await CafeContext.Users
+            .Where(user => user.EmailAddress == emailSearch)
+            .Select(user => new EmailQueryDto()
+            {
+                FirstName = user.FirstName,
+                EmailAddress = user.EmailAddress,
+                LastName = user.LastName,
+                Wallet = user.WalletBalance
+            })
+            .FirstOrDefaultAsync();
+    }
+    
     public async Task SaveAsync()
     {
         await CafeContext.SaveChangesAsync();
         return;
     }
+    
+    
     
     public static string GetUniqueKey(int size)
     {            
@@ -182,4 +212,5 @@ public class UserRepository : IUserRepository
 
         return result.ToString();
     }
+    
 }

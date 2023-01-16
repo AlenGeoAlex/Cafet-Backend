@@ -26,6 +26,10 @@ public interface IUserRepository
 
     Task<User?> TryRegister(RegistrationParam param);
 
+    Task<List<EmailQueryDto>> GetEmailAddress(string emailSearch);
+
+    Task<EmailQueryDto?> GetUserOfEmailAddress(string emailSearch);
+
     Task SaveAsync();
 
 }

@@ -38,6 +38,7 @@ public class MapProvider : Profile
 
 
         CreateMap<DailyStock, DailyStockDto>()
+            .ForMember(dto => dto.FoodPrice, o => o.MapFrom(ds => ds.Food.FoodPrice))
             .ForMember(dto => dto.FoodImage, o => o.MapFrom<DailyStockImageUrlResolver>())
             .ForMember(dto => dto.FoodId, o => o.MapFrom(ds => ds.Food.Id))
             .ForMember(dto => dto.FoodCategory, o => o.MapFrom(ds => ds.Food.Category.CategoryName))

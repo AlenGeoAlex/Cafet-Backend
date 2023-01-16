@@ -18,4 +18,12 @@ public interface IStockRepository
     Task<bool> DeleteStockAsync(int id);
 
     Task<bool> DeleteStockAsync(List<int> id);
+
+    Task<List<DailyStock>> GetStockFromFoodName(string queryString);
+
+    Task<DailyStock?> GetStockOfId(int id);
+
+    Task<DailyStock?> GetStockOfFoodId(int id);
+
+    Task<List<DailyStock>> GetStockOfFoodIds(List<int> FoodIds);
 }

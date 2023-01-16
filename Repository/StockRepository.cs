@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Cafet_Backend.Context;
 using Cafet_Backend.Dto;
+using Cafet_Backend.Dto.InputDtos;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +52,7 @@ public class StockRepository : IStockRepository
     
     public async Task<bool> DeleteStockAsync(List<int> id)
     {
-        List<DailyStock> dailyStocks = await CafeContext.Stocks.Where(st => id.Contains(st.Id)).ToListAsync();
+        List<DailyStock?> dailyStocks = await CafeContext.Stocks.Where(st => id.Contains(st.Id)).ToListAsync();
 
         if (dailyStocks.Count <= 0)
             return false;
@@ -67,6 +68,31 @@ public class StockRepository : IStockRepository
             .Include(stock => stock.Food)
             .Include(stock => stock.Food.Category )
             .ToListAsync();
+    }
+
+    public async Task<List<DailyStock>> GetStockFromFoodName(string queryString)
+    {
+        return await CafeContext.Stocks
+            .Include(stock => stock.Food)
+            .Include(stock => stock.Food.Category)
+            .Where(stock => stock.Food.Name.Contains(queryString))
+            .ToListAsync();
+    }
+
+    public async Task<DailyStock?> GetStockOfId(int id)
+    {
+        return await CafeContext.Stocks
+            .Include(stock => stock.Food)
+            .Include(stock => stock.Food.Category)
+            .FirstOrDefaultAsync(stock => stock.Id == id);
+    }
+    
+    public async Task<DailyStock?> GetStockOfFoodId(int id)
+    {
+        return await CafeContext.Stocks
+            .Include(stock => stock.Food)
+            .Include(stock => stock.Food.Category)
+            .FirstOrDefaultAsync(stock => stock.FoodId == id);
     }
 
     public DailyStockDto AsDto(DailyStock ds)
@@ -91,4 +117,11 @@ public class StockRepository : IStockRepository
         return true;
     }
 
+    public async Task<List<DailyStock>> GetStockOfFoodIds(List<int> FoodIds)
+    {
+        return await CafeContext.Stocks
+            .Include(stock => stock.Food)
+            .Where(stock => FoodIds.Contains(stock.FoodId))
+            .ToListAsync();
+    }
 }

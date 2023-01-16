@@ -67,6 +67,9 @@ public class CafeContext : DbContext
                  userBuilder
                      .HasIndex(u => u.EmailAddress)
                      .IsUnique();
+                 
+
+                     
 
                  var foodBuilder = modelBuilder.Entity<Food>();
          
