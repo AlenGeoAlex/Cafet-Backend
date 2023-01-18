@@ -21,6 +21,7 @@ public class MailService : IMailService
             Password = mailConfiguration.Value.Credentials.Password,
         };
         this.mailConfiguration = mailConfiguration.Value;
+        this.Logger = logger;
     }
     
     public async Task<bool> SendMailAsync(MailModel? model, string emailAddress ,string[] param)
@@ -41,7 +42,7 @@ public class MailService : IMailService
             return false;
         }
 
-        MailMessage mailMessage = new MailMessage("no-reply@cafet.com", emailAddress, model.Subject, body);
+        MailMessage mailMessage = new MailMessage("alengeoalex123@gmail.com", emailAddress, model.Subject, body);
         mailMessage.IsBodyHtml = true;
         
         try
@@ -73,7 +74,7 @@ public class MailService : IMailService
         }
         catch (Exception e)
         {
-            Logger.LogError("An unknown error occured while sending a mail.", e);
+            Logger.LogError("An unknown error occured while sending a mail. "+e.ToString());
             return false;
         }
         

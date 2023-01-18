@@ -24,6 +24,8 @@ public interface IUserRepository
 
     Task<User?> ResetPassword(int id);
 
+    Task<User?> ResetPassword(User userOfId);
+
     Task<User?> TryRegister(RegistrationParam param);
 
     Task<List<EmailQueryDto>> GetEmailAddress(string emailSearch);

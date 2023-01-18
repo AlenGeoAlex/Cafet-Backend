@@ -95,21 +95,27 @@ public class UserRepository : IUserRepository
         User? userOfId = await GetUserOfId(id);
         if (userOfId == null)
             return null;
-        
+
+        return await ResetPassword(userOfId);
+    }
+
+    public async Task<User?> ResetPassword(User userOfId)
+    {
         HMACSHA512 hasher = new HMACSHA512();
         string password = GetUniqueKey(10);
         byte[] salt = hasher.Key;
         byte[] passwordHash = hasher.ComputeHash(Encoding.UTF8.GetBytes(password));
-
-        userOfId.PasswordHash = passwordHash;
-        userOfId.UserSalt = salt;
-
-        CafeContext.Update(userOfId);
-        await CafeContext.SaveChangesAsync();
+        
         string[] passwordPlaceholder = new string[1];
         passwordPlaceholder[0] = password;
-        await mailService.SendMailAsync(modelManager.PasswordResetMailModel, userOfId.EmailAddress , passwordPlaceholder);
+        bool emailSend = await mailService.SendMailAsync(modelManager.PasswordResetMailModel, userOfId.EmailAddress , passwordPlaceholder);
+        if (!emailSend)
+            return null;
         
+        userOfId.PasswordHash = passwordHash;
+        userOfId.UserSalt = salt;
+        CafeContext.Update(userOfId);
+        await CafeContext.SaveChangesAsync();
         return userOfId;
     }
 

@@ -4,6 +4,7 @@ using System.Text;
 using AutoMapper;
 using Cafet_Backend.Abstracts;
 using Cafet_Backend.Dto;
+using Cafet_Backend.Dto.InputDtos;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
 using Cafet_Backend.Provider;
@@ -127,5 +128,21 @@ public class AuthController : AbstractController
         credentialsDto.RefreshToken = refreshToken;
 
         return Created("/user/"+userOfEmail.Id,JsonConvert.SerializeObject(credentialsDto));
+    }
+
+    [HttpPost("reset-pass")]
+    public async Task<ActionResult> ResetUserPassword([FromBody] ResetPassword resetPassword)
+    {
+        User? userOfEmail = await _userRepository.GetUserOfEmail(resetPassword.EmailAddress);
+
+        if (userOfEmail == null)
+            return BadRequest("No email address is found!");
+
+        User? changedUser = await _userRepository.ResetPassword(userOfEmail);
+
+        if (changedUser == null)
+            return BadRequest("Failed to reset the password");
+        
+        return Ok();
     }
 }
