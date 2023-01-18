@@ -11,10 +11,11 @@ public class CartRepository : ICartRepository
 {
 
     private readonly CafeContext CafeContext;
-
-    public CartRepository(CafeContext cafeContext)
+    private readonly ILogger<CartRepository> Logger;
+    public CartRepository(CafeContext cafeContext, ILogger<CartRepository> logger)
     {
         CafeContext = cafeContext;
+        this.Logger = logger;
     }
 
     public async Task<bool> DeleteCart(Guid cartId)

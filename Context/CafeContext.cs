@@ -14,6 +14,10 @@ public class CafeContext : DbContext
     public DbSet<FoodCategory> Categories { get; set; }
     public DbSet<Food> Foods { get; set; }
     
+    public DbSet<WalletHistory> WalletHistories { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    
+    public DbSet<OrderItems> OrderItems { get; set; }
     public DbSet<DailyStock> Stocks { get; set; }
 
     public CafeContext(DbContextOptions<CafeContext> options) : base(options)
@@ -39,6 +43,7 @@ public class CafeContext : DbContext
 
                  //Configuring Users
                  var userBuilder = modelBuilder.Entity<User>();
+
                  userBuilder
                      .Property(u => u.Activated)
                      .HasDefaultValue(false);
@@ -76,11 +81,36 @@ public class CafeContext : DbContext
                  foodBuilder
                      .Property(f => f.FoodImage)
                      .HasDefaultValue("default.png");
-         
-         
-         
-                 //Adding Default Administrator
-                 //userBuilder.HasData(User.DefaultAdmin);
+                 
+
+                 EntityTypeBuilder<Order> orderBuilder = modelBuilder.Entity<Order>();
+                 
+                 orderBuilder.HasOne(o => o.OrderPlacedBy)
+                     .WithMany()
+                     .OnDelete(DeleteBehavior.NoAction);
+
+                 orderBuilder.HasOne(o => o.OrderPlacedFor)
+                     .WithMany()
+                     .OnDelete(DeleteBehavior.Cascade);
+
+                 orderBuilder
+                     .Property(o => o.Cancelled)
+                     .HasDefaultValue(false);
+
+                 EntityTypeBuilder<WalletHistory> walletBuilder = modelBuilder.Entity<WalletHistory>();
+                 
+                 
+                 walletBuilder.HasOne(o => o.Recipient)
+                     .WithMany()
+                     .HasForeignKey(x => x.RecipientId)
+                     .OnDelete(DeleteBehavior.ClientSetNull);
+                 
+                 walletBuilder.HasOne(o => o.Sender)
+                     .WithMany()
+                     .HasForeignKey(x => x.SenderId)
+                     .OnDelete(DeleteBehavior.ClientSetNull);
+                 
+                 
         }
         catch (Exception e)
         {

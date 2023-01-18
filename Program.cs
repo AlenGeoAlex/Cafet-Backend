@@ -14,19 +14,25 @@ builder.CreateCorsPolicy();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Host.ConfigureLogging(configureLogging =>
+{
+    configureLogging.ClearProviders();
+    configureLogging.AddConsole();
+});
 
 var app = builder.Build();
 
 
 // Configure the HTTP request pipeline.
 //Things should be in order from here on
+
+    
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseMiddleware<JwtMiddleware>();
-
 app.UseCors(Constants.CorsPolicyName);
 
 app.UseHttpsRedirection();
@@ -34,6 +40,7 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<JwtMiddleware>();
 
 app.UseStatusCodePages();
 app.UseStaticFiles();

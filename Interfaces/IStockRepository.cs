@@ -1,4 +1,5 @@
 ﻿using Cafet_Backend.Dto;
+using Cafet_Backend.Dto.InputDtos;
 using Cafet_Backend.Models;
 
 namespace Cafet_Backend.Interfaces;
@@ -7,7 +8,7 @@ public interface IStockRepository
 {
     Task<bool> ClearCurrentStockAsync();
 
-    Task<bool> RegisterDailyStockAsync(List<DailyStock> stocks);
+    Task<bool> RegisterDailyStockAsync(List<DailyStock> stocks, bool clear);
 
     Task<List<DailyStock>> GetAllStockAsync();
 
@@ -26,4 +27,6 @@ public interface IStockRepository
     Task<DailyStock?> GetStockOfFoodId(int id);
 
     Task<List<DailyStock>> GetStockOfFoodIds(List<int> FoodIds);
+
+    Task<ProcessedOrder> ProcessOrderResponse(List<FoodOrder> foodOrders);
 }

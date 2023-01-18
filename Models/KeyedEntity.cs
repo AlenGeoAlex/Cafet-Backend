@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cafet_Backend.Models;
 
-public class KeyedEntity
+public class KeyedEntity<TKey>
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; set; }
+    public TKey Id { get; set; }
 }

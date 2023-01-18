@@ -21,6 +21,7 @@ public abstract class AbstractImageProvider
         ProviderDirectory = $"{BaseImageDirectory}" +
                             $"{providerName.ToLower()}";
         Console.WriteLine(ProviderDirectory);
+        
         InitDirectory();
     }
     private void InitDirectory()

@@ -2,7 +2,7 @@
 
 namespace Cafet_Backend.Models;
 
-public class Role : KeyedEntity
+public class Role : KeyedEntity<int>
 {
 
     public static readonly Role Administrator = new Role()

@@ -2,7 +2,7 @@
 
 namespace Cafet_Backend.Models;
 
-public class DailyStock : KeyedEntity
+public class DailyStock : KeyedEntity<int>
 {
     [ForeignKey("FoodId")] public Food Food { get; set; }
     

@@ -3,6 +3,7 @@ using Cafet_Backend.Dto;
 using Cafet_Backend.Dto.InputDtos;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -49,11 +50,11 @@ public class StockController : AbstractController
     }
 
     [HttpPost("register")]
+    //[Authorize(Roles = "Staff")]
     [ProducesResponseType(typeof(UnprocessableEntityObjectResult), 422)]
     [ProducesResponseType(typeof(OkObjectResult), 200)]
-    public async Task<IActionResult> UpdateDailyStock([FromBody] SelectedFood[] selectedFoods)
+    public async Task<IActionResult> UpdateDailyStock([FromBody] SelectedFood[] selectedFoods, string? clear)
     {
-        
         if (selectedFoods == null || selectedFoods.Length == 0)
             return BadRequest("Empty food stock returned!");
 
@@ -77,8 +78,11 @@ public class StockController : AbstractController
             };
             dailyStocks.Add(stock);
         }
+
         
-        await StockRepository.RegisterDailyStockAsync(dailyStocks);
+        bool clearStatus = !(string.IsNullOrEmpty(clear) || clear == "0");
+        
+        await StockRepository.RegisterDailyStockAsync(dailyStocks, clearStatus);
 
         if (failedtoRegister.Count > 0)
             return UnprocessableEntity(failedtoRegister);

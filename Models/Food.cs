@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cafet_Backend.Models;
 
-public class Food : KeyedEntity
+public class Food : KeyedEntity<int>
 {
     [MaxLength(30)] public string Name { get; set; }
 

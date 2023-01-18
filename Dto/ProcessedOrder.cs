@@ -2,26 +2,41 @@
 
 namespace Cafet_Backend.Dto;
 
-public class StaffOrderResponseDto
+public class ProcessedOrder
 {
     public Guid OrderId { get; set; }
     
     public bool OrderSuccessful { get; set; }
     
     public Dictionary<int, bool> OrderStatus { get; set; }
+    
+    public Dictionary<int, int> OrderFoodQuantity { get; set; }
 
     public double OrderCost { get; set; }
 
-    public StaffOrderResponseDto(FoodOrder[] foodOrders)
+    public ProcessedOrder(FoodOrder[] foodOrders)
     {
         OrderSuccessful = false;
         OrderStatus = new Dictionary<int, bool>();
+        OrderFoodQuantity = new Dictionary<int, int>();
         foreach (FoodOrder order in foodOrders)
         {
             OrderStatus.Add(order.FoodId, false);
+            OrderFoodQuantity.Add(order.FoodId, order.OrderQuantity);
         }
     }
 
+    public ProcessedOrder(List<FoodOrder> foodOrders)
+    {
+        OrderSuccessful = false;
+        OrderStatus = new Dictionary<int, bool>();
+        OrderFoodQuantity = new Dictionary<int, int>();
+        foreach (FoodOrder order in foodOrders)
+        {
+            OrderStatus.Add(order.FoodId, false);
+            OrderFoodQuantity.Add(order.FoodId, order.OrderQuantity);
+        }
+    }
     public bool Validate()
     {
         bool status = true;
@@ -36,7 +51,6 @@ public class StaffOrderResponseDto
 
         if (status)
         {
-            this.OrderId = Guid.NewGuid();
             this.OrderSuccessful = true;
         }
 

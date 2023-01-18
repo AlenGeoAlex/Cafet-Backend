@@ -27,9 +27,10 @@ public class StockRepository : IStockRepository
         return true;
     }
 
-    public async Task<bool> RegisterDailyStockAsync(List<DailyStock> stocks)
+    public async Task<bool> RegisterDailyStockAsync(List<DailyStock> stocks, bool clear)
     {
-        await ClearCurrentStockAsync();
+        if(clear)
+            await ClearCurrentStockAsync();
         await CafeContext.Stocks.AddRangeAsync(stocks);
         await CafeContext.SaveChangesAsync();
         return true;
@@ -40,7 +41,6 @@ public class StockRepository : IStockRepository
         DailyStock? firstOrDefaultAsync = await CafeContext.Stocks
             .FirstOrDefaultAsync(stock => stock.Id == id);
 
-        Console.WriteLine(JsonConvert.SerializeObject(firstOrDefaultAsync));
         
         if (firstOrDefaultAsync == null)
             return false;
@@ -123,5 +123,36 @@ public class StockRepository : IStockRepository
             .Include(stock => stock.Food)
             .Where(stock => FoodIds.Contains(stock.FoodId))
             .ToListAsync();
+    }
+
+    public async Task<ProcessedOrder> ProcessOrderResponse(List<FoodOrder> foodOrders)
+    {
+        double cost = 0D;
+        ProcessedOrder response = new ProcessedOrder(foodOrders);
+        List<int> orderedFoodIds = response.GetAllFoodIds();
+        List<DailyStock> stockOfFoodIds = await GetStockOfFoodIds(orderedFoodIds);
+        
+        foreach (DailyStock dailyStock in stockOfFoodIds)
+        {
+            int eachFoodId = dailyStock.FoodId;
+            long inQuantity = dailyStock.CurrentStock;
+
+            FoodOrder? @default = foodOrders.FirstOrDefault(order => order.FoodId == eachFoodId);
+            if(@default == null)
+                continue;
+
+            int requiredQuantity = @default.OrderQuantity;
+
+            if (requiredQuantity <= inQuantity)
+            {
+                response.SetAvailableOfFoodId(eachFoodId);
+                cost += (dailyStock.Food.FoodPrice * requiredQuantity);
+            }
+        }
+        
+        if (response.Validate())
+            response.OrderCost = cost;
+
+        return response;
     }
 }

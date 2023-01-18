@@ -102,7 +102,6 @@ public class AuthController : AbstractController
             return BadRequest("Failed to generate the user");
         }
 
-        await _userRepository.Register(user);
         if (string.IsNullOrEmpty(param.Password))
         {
             return Ok();

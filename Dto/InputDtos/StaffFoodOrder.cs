@@ -10,7 +10,7 @@ public class StaffFoodOrder
     [Required]
     public EmailQueryDto User{ get; set; }
     
-    [Required] public FoodOrder[] SelectedFood { get; set; }
+    [Required] public List<FoodOrder> SelectedFood { get; set; }
     
 }
 

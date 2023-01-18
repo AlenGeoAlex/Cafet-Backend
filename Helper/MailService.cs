@@ -12,7 +12,8 @@ public class MailService : IMailService
     
     private readonly NetworkCredential NetworkCredential;
     private readonly MailConfiguration mailConfiguration;
-    public MailService(IOptions<MailConfiguration> mailConfiguration)
+    private readonly ILogger<MailService> Logger;
+    public MailService(IOptions<MailConfiguration> mailConfiguration, ILogger<MailService> logger)
     {
         this.NetworkCredential = new NetworkCredential()
         {
@@ -24,10 +25,9 @@ public class MailService : IMailService
     
     public async Task<bool> SendMailAsync(MailModel? model, string emailAddress ,string[] param)
     {
-        Console.WriteLine("Send Mail");
         if (model == null)
         {
-            Console.WriteLine("The model provided is null");
+            Logger.LogWarning("The provided MailModel is empty! Aborting mail task...");
             return false;
         }
         string body;
@@ -37,7 +37,7 @@ public class MailService : IMailService
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            Logger.LogError("Failed to parse the mail body", e);
             return false;
         }
 
@@ -46,7 +46,6 @@ public class MailService : IMailService
         
         try
         {
-            Console.WriteLine(mailConfiguration.Credentials.Hostname);
             SmtpClient cleSmtpClient = null;
             using (
                 cleSmtpClient = new SmtpClient(mailConfiguration.Credentials.Hostname, mailConfiguration.Credentials.Port)
@@ -58,13 +57,23 @@ public class MailService : IMailService
                 }
             )
             {
-                cleSmtpClient.SendAsync(mailMessage, null);
-                Console.WriteLine(123);
+                await cleSmtpClient.SendMailAsync(mailMessage);
+                cleSmtpClient.SendCompleted += (sender, args) =>
+                {
+                    Logger.LogInformation("Mail Status: ");
+                    Logger.LogInformation($"Recipient: {emailAddress}");
+                    Logger.LogInformation($"Subject: {model.Subject}");
+                    Logger.LogInformation($"Cancelled: {args.Cancelled}");
+                    if (args.Error != null)
+                    {
+                        Logger.LogError("Error Occured ",args.Error);
+                    }
+                };
             }
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            Logger.LogError("An unknown error occured while sending a mail.", e);
             return false;
         }
         

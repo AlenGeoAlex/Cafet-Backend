@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cafet_Backend.Models;
 
-public class User : KeyedEntity
+public class User : KeyedEntity<int>
 {
     public static readonly User DefaultAdmin = new User()
     {

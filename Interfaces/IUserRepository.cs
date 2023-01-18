@@ -31,5 +31,5 @@ public interface IUserRepository
     Task<EmailQueryDto?> GetUserOfEmailAddress(string emailSearch);
 
     Task SaveAsync();
-
+    
 }

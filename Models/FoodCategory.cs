@@ -2,7 +2,7 @@
 
 namespace Cafet_Backend.Models;
 
-public class FoodCategory : KeyedEntity
+public class FoodCategory : KeyedEntity<int>
 {
     [MaxLength(30)] public string CategoryName { get; set; }
 
