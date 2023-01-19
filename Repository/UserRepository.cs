@@ -8,6 +8,7 @@ using Cafet_Backend.Manager;
 using Cafet_Backend.Models;
 using Cafet_Backend.QueryParams;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Cafet_Backend;
 
@@ -17,19 +18,19 @@ public class UserRepository : IUserRepository
     private readonly CafeContext CafeContext;
     private readonly MailModelManager modelManager;
     private readonly IMailService mailService;
-    //private readonly ICartRepository CartRepository;
-    //private readonly IOrderRepository OrderRepository;
+    private readonly IConfiguration Configuration;
     private readonly ImageProviderManager ImageProviderManager;
     private readonly ILogger<UserRepository> Logger;
     internal static readonly char[] chars =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray(); 
-    public UserRepository(CafeContext cafeContext, MailModelManager modelManager, IMailService mailService, ImageProviderManager imageProviderManager, ILogger<UserRepository> logger)
+    public UserRepository(CafeContext cafeContext, MailModelManager modelManager, IMailService mailService, ImageProviderManager imageProviderManager, IConfiguration configuration ,ILogger<UserRepository> logger)
     {
         CafeContext = cafeContext;
         this.modelManager = modelManager;
         this.mailService = mailService;
         this.Logger = logger;
         this.ImageProviderManager = imageProviderManager;
+        this.Configuration = configuration;
     }
 
     public async Task<User?> GetUserOfId(int id)
@@ -196,8 +197,20 @@ public class UserRepository : IUserRepository
             HMACSHA512 hasher = new HMACSHA512();
             passwordSalt = hasher.Key;
             passwordHash = hasher.ComputeHash(Encoding.UTF8.GetBytes(profileUpdate.Password));
-            
-            //TODO Send password change email!
+
+            string clientAddress = Configuration["client"];
+            string resetUrl = $"{clientAddress}auth/reset/{profileUpdate.EmailAddress}";
+            string[] param = new[] { resetUrl };
+            bool mailSend = await mailService.SendMailAsync(modelManager.PasswordChangeAlert, profileUpdate.EmailAddress, param);
+            if (!mailSend)
+            {
+                Logger.LogError("Failed to send password change alert to user "+user.EmailAddress);
+                return null;
+            }
+            else
+            {
+                Logger.Log(LogLevel.Information, "Successfully send password change alert to user");
+            }
         }
 
 

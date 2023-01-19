@@ -18,6 +18,7 @@ public class MailConfiguration : AbstractConfigurationOptions
 {
     public Mailer PasswordReset { get; set; }
     
+    public Mailer PasswordChangedAlert { get; set; }
     public MailCredentials Credentials { get; set; }
     public override string ConfigBinder()
     {

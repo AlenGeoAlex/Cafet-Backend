@@ -10,8 +10,8 @@ public class MailModelManager
     public IWebHostEnvironment HostEnvironment { get; set; }
     public MailModel? PasswordResetMailModel { get; set; }
     private readonly string baseMailerDirectory;
-
-
+    public MailModel? PasswordChangeAlert { get; set; }
+    
     public MailModelManager(IOptions<MailConfiguration> mailConfigurations, IWebHostEnvironment hostEnvironment)
     {
         this.mailConfigurations = mailConfigurations;
@@ -26,6 +26,7 @@ public class MailModelManager
     private void loadMailModels()
     {
         PasswordResetMailModel = loadModel(mailConfigurations.Value.PasswordReset);
+        PasswordChangeAlert = loadModel(mailConfigurations.Value.PasswordChangedAlert);
         if (PasswordResetMailModel == null)
         {
             return;
