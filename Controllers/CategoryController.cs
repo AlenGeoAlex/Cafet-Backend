@@ -32,8 +32,8 @@ public class CategoryController : AbstractController
     public async Task<IActionResult> GetById(int id)
     {
         FoodCategory? foodCategory = await CategoryRepository.GetByIdAsync(id);
-        if (foodCategory != null)
-            Ok(foodCategory);
+        if (foodCategory != null) 
+            return Ok(foodCategory);
         
         
         return NotFound(new ApiException(404, "The category is unknown", $"The category with name {id} is unknown to the system"));
@@ -45,7 +45,7 @@ public class CategoryController : AbstractController
     {
         FoodCategory? foodCategory = await CategoryRepository.GetByNameAsync(name);
         if (foodCategory != null)
-            Ok(foodCategory);
+            return Ok(foodCategory);
         
         
         return NotFound(new ApiException(404, "The category is unknown", $"The category with name {name} is unknown to the system"));

@@ -72,7 +72,20 @@ public class FoodController : AbstractController
         string CategoryId = readFormAsync["CategoryId"];
         string FoodDescription = readFormAsync["FoodDescription"];
         string FoodPrice = readFormAsync["FoodPrice"];
-        string ImageName = "default.png";
+        string ImageName = foodRawAsync.FoodImage;
+        string V = readFormAsync["FoodType"];
+        List<string> Tags = new List<string>();
+
+        bool Vegeterian = Convert.ToBoolean(V);
+        string _tags = readFormAsync["Tags"];
+        string[] tagArray = _tags.Split(",");
+        if (tagArray != null && tagArray.Length > 0)
+        {
+            foreach (string tag in tagArray)
+            {
+                Tags.Add(tag);
+            }
+        }
         
         IFormFile? @default = readFormAsync.Files.FirstOrDefault();
         if (@default != null)
@@ -121,7 +134,20 @@ public class FoodController : AbstractController
         string FoodDescription = readFormAsync["FoodDescription"];
         string FoodPrice = readFormAsync["FoodPrice"];
         string ImageName = "default.png";
-        
+        string V = readFormAsync["FoodType"];
+        List<string> Tags = new List<string>();
+
+        bool Vegeterian = Convert.ToBoolean(V);
+        string _tags = readFormAsync["Tags"];
+        string[] tagArray = _tags.Split(",");
+        if (tagArray != null && tagArray.Length > 0)
+        {
+            foreach (string tag in tagArray)
+            {
+                Tags.Add(tag);
+            }
+        }
+
         IFormFile? @default = readFormAsync.Files.FirstOrDefault();
         if (@default != null)
         {
@@ -141,7 +167,9 @@ public class FoodController : AbstractController
             CategoryId = Convert.ToInt32(CategoryId),
             FoodDescription = FoodDescription,
             FoodImage = ImageName,
-            FoodPrice = Convert.ToDouble(FoodPrice)
+            FoodPrice = Convert.ToDouble(FoodPrice),
+            Vegetarian = Vegeterian,
+            TagCollection = Tags,
         };
 
         await FoodRepository.Register(newFood);

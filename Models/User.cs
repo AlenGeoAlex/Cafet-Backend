@@ -44,6 +44,8 @@ public class User : KeyedEntity<int>
     
     public string ProfileImage { get; set; }
     
+    public string? PhoneNumber { get; set; }
+    
     [Required]
     public bool Activated { get; set; } = false;
     

@@ -56,6 +56,7 @@ public class UsersController : AbstractController
     
     
     [HttpPost("delete")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteAccount([FromBody] AccountStatusParam accountStatusParam)
     {
         User? userOfId = await UserRepository.GetUserOfId(accountStatusParam.AccountId);
@@ -83,6 +84,17 @@ public class UsersController : AbstractController
         return dtoList;
     }
 
+    [HttpGet("email/{address}")]
+    public async Task<ActionResult<UserDto>> GetUserOfEmailAddress(string address)
+    {
+        User? userOfEmail = await UserRepository.GetUserOfEmail(address);
+
+        if (userOfEmail == null)
+            return NoContent();
+
+        return Ok(Mapper.Map<UserDto>(userOfEmail));
+    }
+
     [HttpPost("wallet-recharge")]
     [Authorize(Roles = "Staff, Customer")]
     public async Task<ActionResult> WalletRecharge([FromBody] WalletRecharge inputParams)
@@ -105,6 +117,51 @@ public class UsersController : AbstractController
             return BadRequest("Failed to update credit!");
 
         return Ok();
-    } 
+    }
+
+    [HttpPost("update")]
+    public async Task<ActionResult<UserDto>> UpdateProfile()
+    {
+        User? requestAuthor = Request.HttpContext.Items["User"] as User;
+        
+        if(requestAuthor == null)
+            return Forbid("Failed to locate the author of the request!");
+
+        IFormCollection collection = await Request.ReadFormAsync();
+        var EmailAddress = collection["EmailAddress"];
+
+        if (requestAuthor.EmailAddress != EmailAddress)
+        {
+            if (requestAuthor.Role.RoleName != Role.Administrator.RoleName)
+                return Forbid("Your role doesn't permit to edit out users profile information!");
+        }
+
+        var FirstName = collection["FirstName"];
+        var LastName = collection["LastName"];
+        var PhoneNumber = collection["PhoneNumber"];
+        var Password = collection["Password"];
+        bool shouldChangePassword = Password.Count >= 8;
+        bool shouldUpdateProfile = false;
+        IFormFile? imageFile = collection.Files["Image"];
+        if (imageFile != null)
+            shouldUpdateProfile = true;
+
+        ProfileUpdate profileUpdate = new ProfileUpdate()
+        {
+            EmailAddress = EmailAddress,
+            FirstName = FirstName,
+            LastName = LastName,
+            PhoneNumber = PhoneNumber,
+            Password = Password,
+            ImageFile = imageFile
+        };
+
+        User? changed = await UserRepository.UpdateUser(profileUpdate);
+
+        if (changed == null)
+            return BadRequest("Failed to update the user");
+        
+        return Ok(Mapper.Map<UserDto>(changed));
+    }
 
 }

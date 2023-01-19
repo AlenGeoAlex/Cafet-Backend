@@ -75,7 +75,7 @@ public class StockRepository : IStockRepository
         return await CafeContext.Stocks
             .Include(stock => stock.Food)
             .Include(stock => stock.Food.Category)
-            .Where(stock => stock.Food.Name.Contains(queryString))
+            .Where(stock => stock.Food.Name.Contains(queryString) || stock.Food.Tags.Contains(queryString))
             .ToListAsync();
     }
 

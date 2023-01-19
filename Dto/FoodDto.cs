@@ -15,4 +15,8 @@ public class FoodDto
     public int CategoryId { get; set; }
     
     public string Category { get; set; }
+    
+    public bool Vegetarian { get; set; }
+    
+    public List<string> Tags { get; set; }
 }

@@ -10,6 +10,7 @@ public class UserDto
     public double WalletBalance { get; set; }
     public string UserRole { get; set; }
     
+    public string? PhoneNumber { get; set; }
     public bool Activated { get; set; }
     
     public bool Deleted { get; set; }

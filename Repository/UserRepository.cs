@@ -2,6 +2,7 @@
 using System.Text;
 using Cafet_Backend.Context;
 using Cafet_Backend.Dto;
+using Cafet_Backend.Dto.InputDtos;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Manager;
 using Cafet_Backend.Models;
@@ -16,17 +17,19 @@ public class UserRepository : IUserRepository
     private readonly CafeContext CafeContext;
     private readonly MailModelManager modelManager;
     private readonly IMailService mailService;
-    private readonly ICartRepository CartRepository;
-    private readonly IOrderRepository OrderRepository;
+    //private readonly ICartRepository CartRepository;
+    //private readonly IOrderRepository OrderRepository;
+    private readonly ImageProviderManager ImageProviderManager;
+    private readonly ILogger<UserRepository> Logger;
     internal static readonly char[] chars =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray(); 
-    public UserRepository(CafeContext cafeContext, MailModelManager modelManager, IMailService mailService, ICartRepository cartRepository, IOrderRepository orderRepository)
+    public UserRepository(CafeContext cafeContext, MailModelManager modelManager, IMailService mailService, ImageProviderManager imageProviderManager, ILogger<UserRepository> logger)
     {
         CafeContext = cafeContext;
         this.modelManager = modelManager;
         this.mailService = mailService;
-        this.CartRepository = cartRepository;
-        this.OrderRepository = orderRepository;
+        this.Logger = logger;
+        this.ImageProviderManager = imageProviderManager;
     }
 
     public async Task<User?> GetUserOfId(int id)
@@ -84,7 +87,7 @@ public class UserRepository : IUserRepository
         if (userOfId == null)
             return false;
 
-        await CartRepository.ClearCart(userOfId.CartId);
+        //await CartRepository.ClearCart(userOfId.CartId);
         //OrderRepository.DeleteOrderDataOfAsync(userOfId.Id);
         userOfId.Deleted = true;
         return true;
@@ -159,11 +162,12 @@ public class UserRepository : IUserRepository
             ProfileImage = "default.png",
             WalletBalance = 0.0,
         };
-        string[] passwordPlaceholder = new string[1];
-        passwordPlaceholder[0] = password;
+
         
         if (shouldGenPassword)
         {
+            string[] passwordPlaceholder = new string[1];
+            passwordPlaceholder[0] = password;
           bool sendMail =  await mailService.SendMailAsync(modelManager.PasswordResetMailModel, user.EmailAddress, passwordPlaceholder);
           if (sendMail == false)
               return null;
@@ -172,6 +176,60 @@ public class UserRepository : IUserRepository
         CafeContext.Users.Add(user);
         await CafeContext.SaveChangesAsync();
         
+        return user;
+    }
+
+    public async Task<User?> UpdateUser(ProfileUpdate profileUpdate)
+    {
+
+        User? user = await CafeContext.Users.FirstOrDefaultAsync(e => e.EmailAddress == profileUpdate.EmailAddress);
+
+        if (user == null)
+            return null;
+
+        byte[] passwordHash = user.PasswordHash;
+        byte[] passwordSalt = user.UserSalt;
+        string imageFileName = user.ProfileImage;
+
+        if (profileUpdate.ShouldUpdatePassword && profileUpdate.Password != null)
+        {
+            HMACSHA512 hasher = new HMACSHA512();
+            passwordSalt = hasher.Key;
+            passwordHash = hasher.ComputeHash(Encoding.UTF8.GetBytes(profileUpdate.Password));
+            
+            //TODO Send password change email!
+        }
+
+
+        if (profileUpdate.ShouldUpdateImage)
+        {
+
+            if (imageFileName != "default.png")
+            {
+                ImageProviderManager.UserImageProvider.Delete(imageFileName);
+                Logger.LogInformation("Successfully deleted "+imageFileName);
+
+            }
+            
+            string fileName = $"{Guid.NewGuid().ToString().Replace("-", "")}-{profileUpdate.ImageFile.FileName.Replace("-", "")}";
+            fileName = fileName.Trim();
+            string fullFile = ImageProviderManager.UserImageProvider.AsFileName(fileName);
+            using (FileStream fStream = new FileStream(fullFile, FileMode.Create))
+            {
+                await profileUpdate.ImageFile.CopyToAsync(fStream);
+                imageFileName = fileName;
+                Logger.LogInformation("Successfully uploaded "+imageFileName);
+            }
+        }
+
+        user.FirstName = profileUpdate.FirstName;
+        user.LastName = profileUpdate.LastName;
+        user.ProfileImage = imageFileName;
+        user.PhoneNumber = profileUpdate.PhoneNumber;
+        user.PasswordHash = passwordHash;
+        user.UserSalt = passwordSalt;
+
+        await CafeContext.SaveChangesAsync();
         return user;
     }
 

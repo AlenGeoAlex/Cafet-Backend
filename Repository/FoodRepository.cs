@@ -50,7 +50,8 @@ public class FoodRepository : IFoodRepository
     {
         IReadOnlyList<Food> foods =  await CafeContext.Foods
             .Include(food => food.Category)
-            .Where(f => f.Name.Contains(keyword)).ToListAsync();
+            .Where(f => f.Name.Contains(keyword) || f.Tags.Contains(keyword))
+            .ToListAsync();
 
         return AsDtoList(foods);
 

@@ -13,6 +13,8 @@ public class MapProvider : Profile
     {
         CreateMap<Food, FoodDto>()
             .ForMember(dto => dto.FoodId, o => o.MapFrom(food => food.Id) )
+            .ForMember(dto => dto.Vegetarian, o => o.MapFrom(food => food.Vegetarian))
+            .ForMember(dto => dto.Tags, o => o.MapFrom(food => food.TagCollection))
             .ForMember(dto => dto.Category, food => food.MapFrom(food => food.Category.CategoryName))
             .ForMember(dto => dto.FoodImage, food => food.MapFrom<FoodUrlResolver>());
 
@@ -33,6 +35,7 @@ public class MapProvider : Profile
             .ForMember(dto => dto.UserRole, o => o.MapFrom(user => user.Role.RoleName))
             .ForMember(dto => dto.UserImage, o => o.MapFrom<UserImageUrlResolver>())
             .ForMember(dto => dto.WalletBalance, o => o.MapFrom(user => user.WalletBalance))
+            .ForMember(dto => dto.PhoneNumber, o => o.MapFrom(user => user.PhoneNumber))
             .ForMember(dto => dto.Activated, o => o.MapFrom(user => user.Activated))
             .ForMember(dto => dto.Deleted, o => o.MapFrom(user => user.Deleted));
 
@@ -45,6 +48,7 @@ public class MapProvider : Profile
             .ForMember(dto => dto.FoodName, o => o.MapFrom(ds => ds.Food.Name))
             .ForMember(dto => dto.StockId, o => o.MapFrom(ds => ds.Id))
             .ForMember(dto => dto.CurrentInStock, o => o.MapFrom(ds => ds.CurrentStock))
+            .ForMember(dto => dto.FoodType, o => o.MapFrom(ds => ds.Food.Vegetarian))
             .ForMember(dto => dto.TotalInStock, o => o.MapFrom(ds => ds.FoodStock));
 
 

@@ -13,7 +13,6 @@ public class CafeContext : DbContext
     public DbSet<Cart> Carts { get; set; }
     public DbSet<FoodCategory> Categories { get; set; }
     public DbSet<Food> Foods { get; set; }
-    
     public DbSet<WalletHistory> WalletHistories { get; set; }
     public DbSet<Order> Orders { get; set; }
     
@@ -81,7 +80,17 @@ public class CafeContext : DbContext
                  foodBuilder
                      .Property(f => f.FoodImage)
                      .HasDefaultValue("default.png");
-                 
+
+                 foodBuilder
+                     .Property(f => f.Vegetarian)
+                     .HasDefaultValue(false);
+
+                 /*foodBuilder
+                     .Property(f => f.Tags)
+                     .HasConversion(
+                         toSql => JsonConvert.SerializeObject(toSql),
+                         fromSql => JsonConvert.DeserializeObject<List<string>>(fromSql) ?? new List<string>()
+                     );*/
 
                  EntityTypeBuilder<Order> orderBuilder = modelBuilder.Entity<Order>();
                  

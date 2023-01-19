@@ -1,4 +1,5 @@
 ﻿using Cafet_Backend.Dto;
+using Cafet_Backend.Dto.InputDtos;
 using Cafet_Backend.Models;
 using Cafet_Backend.QueryParams;
 
@@ -33,5 +34,7 @@ public interface IUserRepository
     Task<EmailQueryDto?> GetUserOfEmailAddress(string emailSearch);
 
     Task SaveAsync();
-    
+
+    Task<User?> UpdateUser(ProfileUpdate profileUpdate);
+
 }
