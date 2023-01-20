@@ -122,7 +122,11 @@ public class CartRepository : ICartRepository
     private async Task<Cart> GetOrCreate(User user)
     {
         //Get the cart of the user
-        Cart? cartOfUser = await CafeContext.Carts.FirstOrDefaultAsync(c => c.CartId == user.CartId);
+        Cart? cartOfUser = await CafeContext.Carts
+            .Include(c => c.FoodCartData)
+            .ThenInclude(c => c.Food)
+            .ThenInclude(c => c.Category)
+            .FirstOrDefaultAsync(c => c.CartId == user.CartId);
         //Check if user has a cart and if not create a new cart and attach it to the user.
         //A save db has been called here to update the new changes and get the new id of the cart
         if (cartOfUser == null)
@@ -147,19 +151,49 @@ public class CartRepository : ICartRepository
     }
 
 
-
-
-    public async Task<List<CartDto>> GetProcessedCart(Guid cartId)
+    public async Task<CartDto> GetProcessedCartOfUser(User user)
     {
-        List<CartDto> cartDtos = new List<CartDto>();
+        Cart cart = await GetOrCreate(user);
 
-        Cart? cart = await GetCart(cartId);
+        CartDto dto = new CartDto()
+        {
+            CartId = cart.CartId.ToString(),
+            CartData = new List<CartDataDto>(),
+            LastUpdated = DateTime.Now.ToShortTimeString(),
+        };
 
-        if (cart == null)
-            return cartDtos;
-        
-        
-        return cartDtos;
+        foreach (UserCartData cartData in cart.FoodCartData)
+        {
+            int quantity = cartData.Quantity;
+            int foodId = cartData.FoodId;
+
+            DailyStock? dailyStock = await GetFoodWithQuantity(foodId, quantity);
+
+            CartDataDto cartDataDto = new CartDataDto()
+            {
+                FoodCategory = cartData.Food.Category.CategoryName,
+                FoodId = cartData.FoodId,
+                FoodName = cartData.FoodName,
+                FoodType = cartData.Food.Vegetarian,
+                Quantity = quantity,
+                LastUpdated = cartData.LastUpdated.ToLongDateString(),
+            };
+            
+            if (dailyStock == null)
+            {
+                cartDataDto.Available = false;
+            }
+            else
+            {
+                cartDataDto.Available = true;
+                
+            }
+
+            dto.CartData.Add(cartDataDto);
+        }
+
+        dto.Validate();
+        return dto;
     }
 
     private async Task<DailyStock?> GetFoodWithQuantity(int foodId, int quantity)

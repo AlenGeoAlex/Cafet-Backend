@@ -110,7 +110,22 @@ public class FoodRepository : IFoodRepository
 
     public async Task<int> Update(Food food)
     {
-        CafeContext.Foods.Update(food);
+        Food? foodRawAsync = await GetFoodRawAsync(food.Id);
+
+        if (foodRawAsync == null)
+        {
+            await Register(food);
+            return await CafeContext.SaveChangesAsync();
+        }
+
+        foodRawAsync.Name = food.Name;
+        foodRawAsync.CategoryId = food.CategoryId;
+        foodRawAsync.FoodDescription = food.FoodDescription;
+        foodRawAsync.FoodPrice = food.FoodPrice;
+        foodRawAsync.Vegetarian = food.Vegetarian;
+        foodRawAsync.TagCollection = food.TagCollection;
+        foodRawAsync.FoodImage = food.FoodImage;
+
         return await CafeContext.SaveChangesAsync();
     }
 }

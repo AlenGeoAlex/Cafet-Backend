@@ -10,5 +10,4 @@ public class CredentialsDto
     public string ImageLink { get; set; }
     public string CartId { get; set; }
     
-    public string CartData { get; set; }
 }

@@ -38,6 +38,8 @@ public class StockController : AbstractController
 
         return StockRepository.AsDto(stock);
     }
+
+
     
     [HttpGet("food/{id}")]
     public async Task<ActionResult<DailyStockDto>> GetStockOfFoodId(int id)

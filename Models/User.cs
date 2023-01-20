@@ -11,7 +11,7 @@ public class User : KeyedEntity<int>
         FirstName = "Cafet",
         LastName = "Admin",
         CartId = Models.Cart.DummyCart.CartId,
-        EmailAddress = "adminstrator@cafet.com",
+        EmailAddress = "admin@cafet.com",
         RoleId = Models.Role.Administrator.Id, 
         WalletBalance = 0.0,
         ProfileImage = "default.png",
@@ -57,5 +57,5 @@ public class User : KeyedEntity<int>
     
     [Required]
     public Guid CartId { get; set; }
-
+    
 }

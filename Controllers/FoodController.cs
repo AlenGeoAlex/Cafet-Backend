@@ -108,7 +108,9 @@ public class FoodController : AbstractController
             CategoryId = Convert.ToInt32(CategoryId),
             FoodDescription = FoodDescription,
             FoodImage = ImageName,
-            FoodPrice = Convert.ToDouble(FoodPrice)
+            FoodPrice = Convert.ToDouble(FoodPrice),
+            TagCollection = Tags,
+            Vegetarian = Vegeterian 
         };
 
         await FoodRepository.Update(newFood);

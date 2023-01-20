@@ -71,8 +71,8 @@ public class CafeContext : DbContext
                  userBuilder
                      .HasIndex(u => u.EmailAddress)
                      .IsUnique();
-                 
 
+                 //userBuilder.HasData(User.DefaultAdmin);
                      
 
                  var foodBuilder = modelBuilder.Entity<Food>();
@@ -118,8 +118,19 @@ public class CafeContext : DbContext
                      .WithMany()
                      .HasForeignKey(x => x.SenderId)
                      .OnDelete(DeleteBehavior.ClientSetNull);
-                 
-                 
+
+                 EntityTypeBuilder<Cart> cartBuilder = modelBuilder.Entity<Cart>();
+
+                 cartBuilder
+                     .HasMany<UserCartData>(ud => ud.FoodCartData)
+                     .WithOne(c => c.Cart)
+                     .HasForeignKey(s => s.CartId);
+
+                 EntityTypeBuilder<UserCartData> cartDataBuilder = modelBuilder.Entity<UserCartData>();
+                 cartDataBuilder
+                     .HasOne<Food>(c => c.Food)
+                     .WithMany()
+                     .OnDelete(DeleteBehavior.ClientSetNull);
         }
         catch (Exception e)
         {
