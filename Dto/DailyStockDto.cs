@@ -10,6 +10,7 @@ public class DailyStockDto
     public long TotalInStock { get; set; }
     public long CurrentInStock { get; set; }
 
+    public string FoodDescription { get; set; }
     public bool FoodType { get; set; }
     public double FoodPrice { get; set; }
 }

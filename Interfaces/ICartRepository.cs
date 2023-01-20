@@ -1,4 +1,5 @@
-﻿using Cafet_Backend.Models;
+﻿using Cafet_Backend.Dto.InputDtos;
+using Cafet_Backend.Models;
 
 namespace Cafet_Backend.Interfaces;
 
@@ -11,4 +12,8 @@ public interface ICartRepository
     Task<bool> ClearCart(Guid cartId);
 
     Task SaveAsync();
+
+    Task<UserCartData?> AddOrUpdateCart(User user, CartAddition cartAddition);
+
+    Task RemoveItemFromUserCart(User user, int foodId);
 }

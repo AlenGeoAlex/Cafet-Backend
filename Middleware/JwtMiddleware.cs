@@ -25,55 +25,59 @@ public class JwtMiddleware
 
     public async Task Invoke(HttpContext context, IUserRepository userRepository)
     {
-        string authHeader = context.Request.Headers.Authorization;
-        if (string.IsNullOrEmpty(authHeader))
+        if (context.Request.Headers.ContainsKey("Authorization"))
         {
-            await _next(context);
-            return;
+            string authHeader = context.Request.Headers.Authorization;
+            Console.WriteLine(authHeader);
+            if (!string.IsNullOrEmpty(authHeader))
+            {
+
+                string? token = authHeader.Split(" ").LastOrDefault();
+                if (!string.IsNullOrEmpty(token))
+                {
+                    TokenValidationParameters validationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuerSigningKey = true,
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Options.Value.Token))
+                    };
+                    //Logger.LogInformation(token);
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    SecurityToken validatedToken = null;
+                    try
+                    {
+                        tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
+                    }
+                    catch (Exception ignored)
+                    {
+                        // ignored
+                    }
+
+                    if (validatedToken != null)
+                    {
+                        var jwtToken = (JwtSecurityToken)validatedToken;
+                        Claim? firstOrDefault =
+                            jwtToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.NameId);
+
+                        //No Claim
+                        if (firstOrDefault == null)
+                            return;
+
+                        int userId = Convert.ToInt32(firstOrDefault.Value);
+                        User? userOfId = await userRepository.GetUserOfId(userId);
+
+                        if (userOfId == null)
+                            return;
+
+                        context.Items["User"] = userOfId;
+                    }
+                }
+            }
         }
-        string? token = authHeader.Split(" ").LastOrDefault();
-        if (!string.IsNullOrEmpty(token))
-        {
-            TokenValidationParameters validationParameters = new TokenValidationParameters()
-            {
-                ValidateIssuerSigningKey = true,
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Options.Value.Token))
-            };
-            //Logger.LogInformation(token);
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken validatedToken = null;
-            try
-            {
-                tokenHandler.ValidateToken(token, validationParameters , out validatedToken);
-            }
-            catch (Exception ignored)
-            {
-                // ignored
-            }
 
-            if (validatedToken != null)
-            {
-                var jwtToken = (JwtSecurityToken)validatedToken;
-                Claim? firstOrDefault = jwtToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.NameId);
-            
-                //No Claim
-                if(firstOrDefault == null)
-                    return;
-
-                int userId = Convert.ToInt32(firstOrDefault.Value);
-                User? userOfId = await userRepository.GetUserOfId(userId);
-            
-                if(userOfId == null)
-                    return;
-
-                context.Items["User"] = userOfId;
-            }
-        }
-        
         await _next(context);
     }
 }

@@ -29,4 +29,6 @@ public interface IStockRepository
     Task<List<DailyStock>> GetStockOfFoodIds(List<int> FoodIds);
 
     Task<ProcessedOrder> ProcessOrderResponse(List<FoodOrder> foodOrders);
+
+    Task SaveChangesAsync();
 }

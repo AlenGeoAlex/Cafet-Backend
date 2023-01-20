@@ -108,9 +108,16 @@ public class StockController : AbstractController
         else return NoContent();
     }
 
-    [HttpPost]
+    [HttpPost("update")]
     public async Task<IActionResult> Update([FromBody] DailyStockDto dailyStockDto)
     {
-        return null;
+        DailyStock? stock = await StockRepository.GetStockOfId(dailyStockDto.StockId);
+
+        if (stock == null)
+            return NoContent();
+
+        stock.CurrentStock = dailyStockDto.CurrentInStock;
+        await StockRepository.SaveChangesAsync();
+        return Ok();
     }
 }

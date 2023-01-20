@@ -49,6 +49,7 @@ public class MapProvider : Profile
             .ForMember(dto => dto.StockId, o => o.MapFrom(ds => ds.Id))
             .ForMember(dto => dto.CurrentInStock, o => o.MapFrom(ds => ds.CurrentStock))
             .ForMember(dto => dto.FoodType, o => o.MapFrom(ds => ds.Food.Vegetarian))
+            .ForMember(dto => dto.FoodDescription, o => o.MapFrom(ds => ds.Food.FoodDescription))
             .ForMember(dto => dto.TotalInStock, o => o.MapFrom(ds => ds.FoodStock));
 
 

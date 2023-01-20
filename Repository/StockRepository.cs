@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Linq.Expressions;
+using AutoMapper;
 using Cafet_Backend.Context;
 using Cafet_Backend.Dto;
 using Cafet_Backend.Dto.InputDtos;
@@ -69,6 +70,16 @@ public class StockRepository : IStockRepository
             .Include(stock => stock.Food.Category )
             .ToListAsync();
     }
+    
+    public async Task<List<DailyStock>> GetAllStockAsync(string? ignoreStock, string? foodCategory)
+    {
+        bool ignoreOutOfStock = !string.IsNullOrEmpty(ignoreStock) && ignoreStock == "true";
+
+        return await CafeContext.Stocks
+            .Include(stock => stock.Food)
+            .Include(stock => stock.Food.Category )
+            .ToListAsync();
+    }
 
     public async Task<List<DailyStock>> GetStockFromFoodName(string queryString)
     {
@@ -115,6 +126,12 @@ public class StockRepository : IStockRepository
     public async Task<bool> UpdateStockForAsync(DailyStock stock)
     {
         return true;
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await CafeContext.SaveChangesAsync();
+        return;
     }
 
     public async Task<List<DailyStock>> GetStockOfFoodIds(List<int> FoodIds)
