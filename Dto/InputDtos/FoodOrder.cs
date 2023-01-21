@@ -12,5 +12,4 @@ public class FoodOrder
     
     public int OrderQuantity { get; set; }
     
-    public int StockId { get; set; }
 }

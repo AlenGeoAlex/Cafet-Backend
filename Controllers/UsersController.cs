@@ -84,6 +84,17 @@ public class UsersController : AbstractController
         return dtoList;
     }
 
+    [HttpGet("me")]
+    public async Task<ActionResult> GetMyself()
+    {
+        User? requestAuthor = Request.HttpContext.Items["User"] as User;
+        
+        if(requestAuthor == null)
+            return Forbid();
+
+        return Ok(Mapper.Map<UserDto>(requestAuthor));
+    }
+
     [HttpGet("email/{address}")]
     public async Task<ActionResult<UserDto>> GetUserOfEmailAddress(string address)
     {
@@ -102,7 +113,7 @@ public class UsersController : AbstractController
         User? requestAuthor = Request.HttpContext.Items["User"] as User;
         
         if(requestAuthor == null)
-            return Forbid("Failed to locate the author of the request!");
+            return Forbid();
         
         if (inputParams.BalanceToAdd <= 0)
             return Ok();

@@ -13,10 +13,12 @@ public class CartRepository : ICartRepository
 
     private readonly CafeContext CafeContext;
     private readonly ILogger<CartRepository> Logger;
-    public CartRepository(CafeContext cafeContext, ILogger<CartRepository> logger)
+    private readonly IConfiguration Config;
+    public CartRepository(CafeContext cafeContext, ILogger<CartRepository> logger, IConfiguration config)
     {
         CafeContext = cafeContext;
         this.Logger = logger;
+        this.Config = config;
     }
 
     public async Task<bool> DeleteCart(Guid cartId)
@@ -177,6 +179,8 @@ public class CartRepository : ICartRepository
                 FoodType = cartData.Food.Vegetarian,
                 Quantity = quantity,
                 LastUpdated = cartData.LastUpdated.ToLongDateString(),
+                FoodImage =  $"{Config["apiUrl"]}_images/_food/{cartData.Food.FoodImage}",
+                FoodPrice = cartData.Food.FoodPrice,
             };
             
             if (dailyStock == null)
@@ -205,6 +209,8 @@ public class CartRepository : ICartRepository
 
     public async Task<Cart?> GetCart(Guid cartId)
     {
-        return await CafeContext.Carts.FirstOrDefaultAsync(cart => cart.CartId == cartId);
+        return await CafeContext.Carts
+            .Include(x => x.FoodCartData)
+            .FirstOrDefaultAsync(cart => cart.CartId == cartId);
     }
 }

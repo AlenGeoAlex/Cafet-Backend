@@ -28,7 +28,7 @@ public class CartController : AbstractController
         Models.User? requestAuthor = Request.HttpContext.Items["User"] as User;
 
         if (requestAuthor == null)
-            return NoContent();
+            return Forbid();
 
         CartDto cartDto = await CartRepository.GetProcessedCartOfUser(requestAuthor);
 

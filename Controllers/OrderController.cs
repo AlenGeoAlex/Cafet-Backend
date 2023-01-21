@@ -21,26 +21,69 @@ public class OrderController : AbstractController
     public readonly IFoodRepository FoodRepository;
     public readonly IOrderRepository OrderRepository;
     private readonly IWalletRepository WalletRepository;
+    private readonly ICartRepository CartRepository;
     public readonly IMapper Mapper;
 
-    public OrderController(IUserRepository userRepository, IStockRepository stockRepository, IFoodRepository foodRepository,IOrderRepository orderRepository, IWalletRepository walletRepository ,IMapper mapper)
+    public OrderController(IUserRepository userRepository, IStockRepository stockRepository, IFoodRepository foodRepository,IOrderRepository orderRepository, IWalletRepository walletRepository, ICartRepository cartRepository ,IMapper mapper)
     {
         UserRepository = userRepository;
         StockRepository = stockRepository;
         FoodRepository = foodRepository;
         OrderRepository = orderRepository;
         WalletRepository = walletRepository;
+        CartRepository = cartRepository;
         Mapper = mapper;
+    }
+
+    [HttpPost("me")]
+    [Authorize(Roles = "Staff, Customer, Admin")]
+    [ProducesResponseType(typeof(ProcessedOrder), 200)]
+    public async Task<ActionResult> Order([FromBody] FoodOrderRequest inputParam)
+    {
+        User? orderedCustomer = Request.HttpContext.Items["User"] as User;
+        if (orderedCustomer == null)
+            return Forbid();
+        
+        ProcessedOrder processedOrder = await StockRepository.ProcessOrderResponse(inputParam.SelectedFood);
+
+        if (!processedOrder.OrderSuccessful)
+            return BadRequest("Some items are out of stock!");
+        
+        //Pay Using Wallet
+        if (inputParam.PaymentMethod)
+        {
+            if (orderedCustomer.WalletBalance < processedOrder.OrderCost)
+            {
+                return BadRequest("Insufficient Account Balance");
+            }
+
+            bool balanceWithdrawn = await WalletRepository.Withdraw(orderedCustomer.Id, orderedCustomer.Id, processedOrder.OrderCost);
+            if(!balanceWithdrawn)
+            {
+                return BadRequest("Failed to transfer wallet balance!");
+            }
+        }
+
+        Order? order = await OrderRepository.CreateOrder(processedOrder, orderedCustomer, orderedCustomer);
+
+        if (order == null)
+        {
+            return BadRequest("Failed to place the order! Try again!");
+        }
+
+        processedOrder.OrderId = order.Id;
+        await CartRepository.ClearCart(orderedCustomer.CartId);
+        return Ok(processedOrder);
     }
 
     [HttpPost("staff")]
     [Authorize(Roles = "Staff")]
     [ProducesResponseType(typeof(ProcessedOrder), 200)]
-    public async Task<ActionResult> OrderFromStaff([FromBody] StaffFoodOrder inputParam)
+    public async Task<ActionResult> OrderFromStaff([FromBody] StaffFoodOrderRequest inputParam)
     {
         User? orderedStaffUser = Request.HttpContext.Items["User"] as User;
         if (orderedStaffUser == null)
-            return Forbid("Failed to locate the author of the request!");
+            return Forbid();
         
         User? userOfEmail = await UserRepository.GetUserOfEmail(inputParam.User.EmailAddress);
         if (userOfEmail == null)

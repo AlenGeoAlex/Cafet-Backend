@@ -67,6 +67,8 @@ public class OrderRepository : IOrderRepository
         {
             int foodId = foodIdQuantityMap.Key;
             int quantity = foodIdQuantityMap.Value;
+            
+            
             DailyStock? dailyStock = await CafeContext.Stocks.FirstOrDefaultAsync(s => s.FoodId == foodId);
             
             if (dailyStock == null)
@@ -91,7 +93,7 @@ public class OrderRepository : IOrderRepository
         await CafeContext.Orders.AddAsync(order);
         await CafeContext.SaveChangesAsync();
 
-        Console.WriteLine(order.Id);
+        Logger.LogInformation($"Created a new order for ${orderPlacedBy.EmailAddress} with id ${order.Id}");
         
         return order;
     }

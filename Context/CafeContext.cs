@@ -11,6 +11,7 @@ public class CafeContext : DbContext
     public DbSet<Role> Roles { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Cart> Carts { get; set; }
+    public DbSet<UserCartData> UserCartData { get; set; }
     public DbSet<FoodCategory> Categories { get; set; }
     public DbSet<Food> Foods { get; set; }
     public DbSet<WalletHistory> WalletHistories { get; set; }

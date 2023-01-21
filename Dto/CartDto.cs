@@ -8,7 +8,7 @@ public class CartDto
     public bool IsValid { get; set; }
     public List<CartDataDto> CartData { get; set; } = new List<CartDataDto>();
     public string LastUpdated { get; set; }
-
+    
     public bool Validate()
     {
         Count = CartData.Count;
@@ -35,5 +35,8 @@ public class CartDataDto
     public string FoodCategory { get; set; }
     public bool Available { get; set; }
     
+    public double FoodPrice { get; set; }
+    
+    public string FoodImage { get; set; }
     public string LastUpdated { get; set; }
 }

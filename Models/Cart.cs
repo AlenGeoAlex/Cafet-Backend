@@ -16,7 +16,7 @@ public class Cart
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid CartId { get; set; } = Guid.NewGuid();
 
-    public List<UserCartData> FoodCartData { get; set; } = new List<UserCartData>();
+    public virtual List<UserCartData> FoodCartData { get; set; } = new List<UserCartData>();
     
     [Column(TypeName = "Datetime2")]
     public DateTime LastUpdated { get; set; } = DateTime.Now;
