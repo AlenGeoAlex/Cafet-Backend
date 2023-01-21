@@ -24,7 +24,7 @@ public class MailService : IMailService
         this.Logger = logger;
     }
     
-    public async Task<bool> SendMailAsync(MailModel? model, string emailAddress ,string[] param)
+    public async Task<bool> SendMailAsync(MailModel? model, string emailAddress ,string[] param, string[]? subjectParam = null)
     {
         if (model == null)
         {
@@ -39,10 +39,26 @@ public class MailService : IMailService
         catch (Exception e)
         {
             Logger.LogError("Failed to parse the mail body", e);
+            Logger.LogError(e.ToString());
             return false;
         }
 
-        MailMessage mailMessage = new MailMessage("alengeoalex123@gmail.com", emailAddress, model.Subject, body);
+        string subject = model.Subject;
+
+        try
+        {
+            if (subjectParam != null)
+            {
+                subject = string.Format(subject, subjectParam);
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.LogError("Failed to parse the mail body", e);
+            Logger.LogError(e.ToString());
+        }
+
+        MailMessage mailMessage = new MailMessage("alengeoalex123@gmail.com", emailAddress, subject, body);
         mailMessage.IsBodyHtml = true;
         
         try

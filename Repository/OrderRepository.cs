@@ -1,7 +1,9 @@
-﻿using AutoMapper;
+﻿using System.Text;
+using AutoMapper;
 using Cafet_Backend.Context;
 using Cafet_Backend.Dto;
 using Cafet_Backend.Interfaces;
+using Cafet_Backend.Manager;
 using Cafet_Backend.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,15 +12,28 @@ namespace Cafet_Backend.Repository;
 public class OrderRepository : IOrderRepository
 {
 
-    private readonly CafeContext CafeContext;
-    private readonly ILogger<OrderRepository> Logger;
-    private readonly IMapper Mapper;
+    public static readonly string OrderTable =
+        "<tr>" +
+        "<td class='row'>{0}</td>" +
+        "<td class='row'>{1}</td>" +
+        "<td class='row'>{2}</td>" +
+        "<td class='row'>{3}</td>" +
+        "<td class='row'>{4}</td>" +
+        "</tr>";
 
-    public OrderRepository(CafeContext cafeContext, IMapper mapper, ILogger<OrderRepository> logger)
+    public readonly CafeContext CafeContext;
+    public readonly ILogger<OrderRepository> Logger;
+    public readonly MailModelManager MailModelManager;
+    public readonly IMailService MailService;
+    public readonly IMapper Mapper;
+
+    public OrderRepository(CafeContext cafeContext, IMapper mapper, ILogger<OrderRepository> logger, MailModelManager manager, IMailService mailService)
     {
         CafeContext = cafeContext;
         Mapper = mapper;
         Logger = logger;
+        MailModelManager = manager;
+        MailService = mailService;
     }
 
     public async Task<Order?> CreateOrder(ProcessedOrder processedOrder, User orderPlacedBy, User orderPlacedFor)
@@ -33,8 +48,11 @@ public class OrderRepository : IOrderRepository
             .Where(fo => allPossibleFoodId.Contains(fo.Id))
             .ToListAsync();
 
+        StringBuilder mailerBuilder = new StringBuilder();
+        int counter = 1;
         foreach (KeyValuePair<int,bool> foodIdOrderStatus in processedOrder.OrderStatus)
         {
+            
             int foodId = foodIdOrderStatus.Key;
             Food? @default = foodList.FirstOrDefault(f => f.Id ==foodId);
             if (@default == null)
@@ -49,7 +67,16 @@ public class OrderRepository : IOrderRepository
                 return null;
             }
 
-
+            string[] orderTablePlaceholder = new[]
+            {
+                counter.ToString(),
+                @default.Name,
+                @default.FoodPrice.ToString(),
+                processedOrder.OrderFoodQuantity[@default.Id].ToString(),
+                (@default.FoodPrice * processedOrder.OrderFoodQuantity[@default.Id]).ToString()
+            };
+            string orderTable = string.Format(OrderTable, orderTablePlaceholder);
+            mailerBuilder.Append(orderTable);
             OrderItems eachOrderItem = new OrderItems()
             {
                 FoodId = @default.Id,
@@ -93,8 +120,29 @@ public class OrderRepository : IOrderRepository
         await CafeContext.Orders.AddAsync(order);
         await CafeContext.SaveChangesAsync();
 
-        Logger.LogInformation($"Created a new order for ${orderPlacedBy.EmailAddress} with id ${order.Id}");
-        
+        Logger.LogInformation($"Created a new order for {orderPlacedFor.EmailAddress} with id {order.Id}");
+        string[] mailBodyPlaceholder = new string[]
+        {
+            order.Id.ToString(),
+            orderPlacedFor.EmailAddress,
+            orderPlacedFor.FirstName,
+            orderPlacedFor.LastName,
+            orderPlacedFor.PhoneNumber ?? "Unknown",
+            mailerBuilder.ToString()
+        };
+
+        string[] subjectPlaceholder = new string[]
+        {
+            order.Id.ToString()
+        };
+
+        bool mailAsync = await MailService.SendMailAsync(MailModelManager.OrderPlaced, orderPlacedFor.EmailAddress, mailBodyPlaceholder,
+            subjectPlaceholder);
+
+        if (!mailAsync)
+        {
+            Logger.LogWarning("Failed to send order email to "+orderPlacedFor.EmailAddress);
+        }
         return order;
     }
 

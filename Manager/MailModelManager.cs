@@ -12,6 +12,7 @@ public class MailModelManager
     private readonly string baseMailerDirectory;
     public MailModel? PasswordChangeAlert { get; set; }
     
+    public MailModel? OrderPlaced { get; set; }
     public MailModelManager(IOptions<MailConfiguration> mailConfigurations, IWebHostEnvironment hostEnvironment)
     {
         this.mailConfigurations = mailConfigurations;
@@ -27,6 +28,7 @@ public class MailModelManager
     {
         PasswordResetMailModel = loadModel(mailConfigurations.Value.PasswordReset);
         PasswordChangeAlert = loadModel(mailConfigurations.Value.PasswordChangedAlert);
+        OrderPlaced = loadModel(mailConfigurations.Value.OrderPlaced);
         if (PasswordResetMailModel == null)
         {
             return;
