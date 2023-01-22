@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Cafet_Backend.Context;
 using Cafet_Backend.Interfaces;
+using Cafet_Backend.Manager;
 using Cafet_Backend.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,14 +13,25 @@ public class WalletRepository : IWalletRepository
     
     private readonly IMapper Mapper;
 
-    public WalletRepository(CafeContext context, IMapper mapper)
+    private readonly ILogger<WalletRepository> Logger;
+
+    private readonly MailModelManager MailModelManager;
+    private readonly IMailService MailService;
+
+    public WalletRepository(CafeContext context, IMapper mapper, MailModelManager mailModelManager, IMailService mailService, ILogger<WalletRepository> walletRepo)
     {
         Context = context;
         Mapper = mapper;
+        MailModelManager = mailModelManager;
+        MailService = mailService;
+        Logger = walletRepo;
     }
 
     public async Task<bool> Withdraw(int userId, int byUser, double amount)
     {
+        if (amount < 1)
+            return false;
+        
         User? rec = await Context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         if (rec == null)
@@ -47,11 +59,17 @@ public class WalletRepository : IWalletRepository
 
         await Context.WalletHistories.AddAsync(walletHistory);
         await Context.SaveChangesAsync();
+        
+        
+        
         return true;
     }
 
     public async Task<bool> Credit(int userId, int byUser, double amount)
     {
+        if (amount < 1)
+            return false;
+        
         User? rec = await Context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         if (rec == null)
@@ -82,8 +100,19 @@ public class WalletRepository : IWalletRepository
             RechargeTime = DateTime.Now,
         };
 
+        
+        
         await Context.WalletHistories.AddAsync(walletHistory);
         await Context.SaveChangesAsync();
+
+        bool mailAsync = await MailService.SendMailAsync(MailModelManager.WalletRecharge, rec.EmailAddress,
+            new string[] { amount.ToString() });
+
+        if (!mailAsync)
+        {
+            Logger.LogWarning($"Failed to send wallet recharge email to user {rec.EmailAddress} of recharge {walletHistory.Id}");
+        }
+        
         return true;
     }
 

@@ -1,6 +1,6 @@
-﻿/_images/
+﻿/wwwroot/_images/
 /bin/
 /obj/
 /.idea/
 /Migrations/
-/wwwroot/
+

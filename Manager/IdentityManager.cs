@@ -1,4 +1,4 @@
-﻿namespace Cafet_Backend;
+﻿namespace Cafet_Backend.Manager;
 
 public class IdentityManager
 {

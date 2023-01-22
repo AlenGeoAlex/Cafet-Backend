@@ -6,36 +6,39 @@ namespace Cafet_Backend.Manager;
 public class MailModelManager
 {
 
-    public IOptions<MailConfiguration> mailConfigurations { get; set; }
+    public IOptions<MailConfiguration> MailConfigurations { get; set; }
     public IWebHostEnvironment HostEnvironment { get; set; }
     public MailModel? PasswordResetMailModel { get; set; }
-    private readonly string baseMailerDirectory;
+    private readonly string BaseMailerDirectory;
     public MailModel? PasswordChangeAlert { get; set; }
     
     public MailModel? OrderPlaced { get; set; }
+    
+    public MailModel? WalletRecharge { get; set; }
     public MailModelManager(IOptions<MailConfiguration> mailConfigurations, IWebHostEnvironment hostEnvironment)
     {
-        this.mailConfigurations = mailConfigurations;
+        this.MailConfigurations = mailConfigurations;
         this.HostEnvironment = hostEnvironment;
-        baseMailerDirectory = $"{hostEnvironment.WebRootPath}" +
+        BaseMailerDirectory = $"{hostEnvironment.WebRootPath}" +
                              $"{Path.DirectorySeparatorChar}" +
                              $"_mailer" +
                              $"{Path.DirectorySeparatorChar}";
-        loadMailModels();
+        LoadMailModels();
     }
 
-    private void loadMailModels()
+    private void LoadMailModels()
     {
-        PasswordResetMailModel = loadModel(mailConfigurations.Value.PasswordReset);
-        PasswordChangeAlert = loadModel(mailConfigurations.Value.PasswordChangedAlert);
-        OrderPlaced = loadModel(mailConfigurations.Value.OrderPlaced);
+        PasswordResetMailModel = LoadModel(MailConfigurations.Value.PasswordReset);
+        PasswordChangeAlert = LoadModel(MailConfigurations.Value.PasswordChangedAlert);
+        OrderPlaced = LoadModel(MailConfigurations.Value.OrderPlaced);
+        WalletRecharge = LoadModel(MailConfigurations.Value.WalletRecharge);
         if (PasswordResetMailModel == null)
         {
             return;
         }
     }
 
-    private MailModel? loadModel(Mailer mailer)
+    private MailModel? LoadModel(Mailer mailer)
     {
         string file = AsPathName(mailer.FileName);
         if (!File.Exists(file))
@@ -54,7 +57,7 @@ public class MailModelManager
 
     public string AsPathName(string fileName)
     {
-        return $"{baseMailerDirectory}{fileName}";
+        return $"{BaseMailerDirectory}{fileName}";
     }
     
     

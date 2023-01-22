@@ -118,7 +118,18 @@ public class UsersController : AbstractController
         if (inputParams.BalanceToAdd <= 0)
             return Ok();
 
-        User? userOfEmail = await UserRepository.GetUserOfEmail(inputParams.EmailAddress);
+        User? userOfEmail = null;
+
+        if (string.IsNullOrEmpty(inputParams.EmailAddress))
+        {
+            userOfEmail = requestAuthor;
+        }
+        else
+        {
+            userOfEmail = await UserRepository.GetUserOfEmail(inputParams.EmailAddress);
+            
+        }
+        
         if (userOfEmail == null)
             return BadRequest("The user is unknown!");
 

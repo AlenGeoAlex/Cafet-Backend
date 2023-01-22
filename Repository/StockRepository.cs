@@ -136,6 +136,7 @@ public class StockRepository : IStockRepository
 
     public async Task<List<DailyStock>> GetStockOfFoodIds(List<int> FoodIds)
     {
+        
         return await CafeContext.Stocks
             .Include(stock => stock.Food)
             .Where(stock => FoodIds.Contains(stock.FoodId))

@@ -21,6 +21,8 @@ public class MailConfiguration : AbstractConfigurationOptions
     public Mailer PasswordChangedAlert { get; set; }
     
     public Mailer OrderPlaced { get; set; }
+    
+    public Mailer WalletRecharge {get; set; }
     public MailCredentials Credentials { get; set; }
     public override string ConfigBinder()
     {

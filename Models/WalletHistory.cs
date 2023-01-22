@@ -28,7 +28,6 @@ public class WalletHistory : KeyedEntity<int>
     public bool IsSelfRecharge
     {
         get => SenderId == RecipientId;
-        private set { throw new NotImplementedException(); }
     }
     
     public bool Credit { get; set; }
