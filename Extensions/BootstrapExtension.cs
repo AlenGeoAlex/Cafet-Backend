@@ -41,6 +41,7 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddScoped<IStockRepository, StockRepository>();
         applicationBuilder.Services.AddScoped<IOrderRepository, OrderRepository>();
         applicationBuilder.Services.AddScoped<IWalletRepository, WalletRepository>();
+        applicationBuilder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
         applicationBuilder.Services.AddSingleton(typeof(ImageProviderManager));
         applicationBuilder.Services.AddAutoMapper(typeof(MapProvider));
         applicationBuilder.Services.AddSingleton(typeof(TokenService));
