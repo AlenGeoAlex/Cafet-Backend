@@ -70,7 +70,7 @@ public class MailService : IMailService
                     UseDefaultCredentials = false,
                     Credentials = NetworkCredential,
                     EnableSsl = true,
-                    DeliveryMethod = SmtpDeliveryMethod.Network
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
                 }
             )
             {

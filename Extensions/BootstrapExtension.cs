@@ -32,7 +32,7 @@ public static class BootstrapExtension
             builderOptions.UseSqlServer(applicationBuilder.Configuration.GetConnectionString("DefaultConnection"));
         });
 
-
+        applicationBuilder.Services.AddSignalR();
         applicationBuilder.Services.AddScoped<IRoleRepository, RoleRepository>();
         applicationBuilder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         applicationBuilder.Services.AddScoped<IFoodRepository, FoodRepository>();
@@ -126,6 +126,7 @@ public static class BootstrapExtension
                 builder.AllowAnyHeader();
                 builder.AllowAnyMethod();
                 builder.WithOrigins(possibleNewEndPoints.ToArray());
+                builder.AllowCredentials();
             });
         });
         

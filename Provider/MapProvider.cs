@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Cafet_Backend.Dto;
 using Cafet_Backend.Helper;
+using Cafet_Backend.Helper.Resolver;
 using Cafet_Backend.Models;
 using Cafet_Backend.Provider.Image;
 using Newtonsoft.Json;
@@ -51,7 +52,26 @@ public class MapProvider : Profile
             .ForMember(dto => dto.FoodDescription, o => o.MapFrom(ds => ds.Food.FoodDescription))
             .ForMember(dto => dto.TotalInStock, o => o.MapFrom(ds => ds.FoodStock));
 
+        CreateMap<Order, StaffCheckOrderDto>()
+            .ForMember(dto => dto.OrderId, o => o.MapFrom(d => d.Id))
+            .ForMember(dto => dto.OrderedEmail, o => o.MapFrom(d => d.OrderPlacedFor.EmailAddress))
+            .ForMember(dto => dto.OrderedDate, o => o.MapFrom(d => d.OrderPlaced.Date.ToShortDateString()))
+            .ForMember(dto => dto.OrderedTime, o => o.MapFrom(d => d.OrderPlaced.ToShortTimeString()))
+            .ForMember(dto => dto.OrderedUserName, o => o.MapFrom(d => d.OrderPlacedFor.FullName))
+            .ForMember(dto => dto.IsCompleted, o => o.MapFrom(d => d.OrderDelivered != null))
+            .ForMember(dto => dto.IsCancelled, o => o.MapFrom(d => d.Cancelled))
+            .ForMember(dto => dto.OrderedFoods, o => o.MapFrom(d => d.OrderItems))
+            ;
 
+        CreateMap<OrderItems, StaffCheckFoodDto>()
+            .ForMember(dto => dto.FoodId, o => o.MapFrom(s => s.Food.Id))
+            .ForMember(dto => dto.FoodName, o => o.MapFrom(d => d.Food.Name))
+            .ForMember(dto => dto.FoodCategory, o => o.MapFrom(d => d.Food.Category.CategoryName))
+            .ForMember(dto => dto.FoodType, o => o.MapFrom(d => d.Food.Vegetarian))
+            .ForMember(dto => dto.FoodPrice, o => o.MapFrom(d => d.Food.FoodPrice))
+            .ForMember(dto => dto.FoodQuantity, o => o.MapFrom(d => d.Quantity))
+            .ForMember(dto => dto.FoodImageUrl, o => o.MapFrom<StaffCheckOrderImageResolver>());
+            
 
     }
 }

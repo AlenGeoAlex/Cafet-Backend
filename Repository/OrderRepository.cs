@@ -2,9 +2,13 @@
 using AutoMapper;
 using Cafet_Backend.Context;
 using Cafet_Backend.Dto;
+using Cafet_Backend.Hub;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Manager;
 using Cafet_Backend.Models;
+using Cafet_Backend.Provider;
+using Cafet_Backend.Specification;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cafet_Backend.Repository;
@@ -25,15 +29,28 @@ public class OrderRepository : IOrderRepository
     public readonly ILogger<OrderRepository> Logger;
     public readonly MailModelManager MailModelManager;
     public readonly IMailService MailService;
+    public readonly IHubContext<OrderHub, IOrderHubClient> OrderHub;
     public readonly IMapper Mapper;
 
-    public OrderRepository(CafeContext cafeContext, IMapper mapper, ILogger<OrderRepository> logger, MailModelManager manager, IMailService mailService)
+    public OrderRepository(CafeContext cafeContext, IMapper mapper, ILogger<OrderRepository> logger, MailModelManager manager, IMailService mailService, IHubContext<OrderHub, IOrderHubClient> orderHub)
     {
         CafeContext = cafeContext;
         Mapper = mapper;
         Logger = logger;
         MailModelManager = manager;
         MailService = mailService;
+        OrderHub = orderHub;
+    }
+
+    public async Task<List<Order>> GetOrdersFor(ISpecification<Order> param)
+    {
+        return await SpecificationProvider<Order, Guid>
+            .GetQuery(CafeContext.Set<Order>().AsQueryable(), param)
+            .Include(or => or.OrderPlacedFor)
+            .Include(or => or.OrderItems)
+            .ThenInclude(or => or.Food)
+            .ThenInclude(or => or.Category)
+            .ToListAsync();
     }
 
     public async Task<Order?> CreateOrder(ProcessedOrder processedOrder, User orderPlacedBy, User orderPlacedFor)
@@ -143,6 +160,9 @@ public class OrderRepository : IOrderRepository
         {
             Logger.LogWarning("Failed to send order email to "+orderPlacedFor.EmailAddress);
         }
+
+        await OrderHub.Clients.All.SendOrderUpdate(Mapper.Map<StaffCheckOrderDto>(order));
+
         return order;
     }
 
@@ -152,5 +172,21 @@ public class OrderRepository : IOrderRepository
         CafeContext.RemoveRange(ordersPlacedByUser);
         await CafeContext.SaveChangesAsync();
     }
-    
+
+    public async Task<Order?> GetOrderOfId(Guid orderId)
+    {
+        return await CafeContext.Orders
+            .Include(o => o.OrderPlacedFor)
+            .Include(o => o.OrderPlacedBy)
+            .Include(o => o.OrderItems)
+            .ThenInclude(o => o.Food)
+            .FirstOrDefaultAsync(o => o.Id == orderId);
+
+    }
+
+    public async Task SaveAsync()
+    {
+        await CafeContext.SaveChangesAsync();
+        return;
+    }
 }

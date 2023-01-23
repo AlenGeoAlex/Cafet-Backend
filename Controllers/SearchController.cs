@@ -1,8 +1,11 @@
-﻿using Cafet_Backend.Abstracts;
+﻿using AutoMapper;
+using Cafet_Backend.Abstracts;
 using Cafet_Backend.Dto;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
+using Cafet_Backend.Specification;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 
 namespace Cafet_Backend.Controllers;
@@ -15,12 +18,25 @@ public class SearchController : AbstractController
     private readonly IUserRepository UserRepository;
     private readonly IFoodRepository FoodRepository;
     private readonly IStockRepository StockRepository;
+    private readonly IOrderRepository OrderRepository;
+    private readonly IMapper Mapper;
 
-    public SearchController(IUserRepository userRepository, IFoodRepository foodRepository, IStockRepository stockRepository)
+    public SearchController(IUserRepository userRepository, IFoodRepository foodRepository, IStockRepository stockRepository, IOrderRepository orderRepository, IMapper mapper)
     {
         UserRepository = userRepository;
         FoodRepository = foodRepository;
         StockRepository = stockRepository;
+        OrderRepository = orderRepository;
+        Mapper = mapper;
+    }
+
+    [HttpGet("order")]
+    [ProducesResponseType(typeof(List<StaffCheckOrderDto>), 200)]
+    public async Task<ActionResult<List<StaffCheckOrderDto>>> GetOrder([FromQuery] OrderSearchSpecificationParam param)
+    {
+        OrderSearchSpecification specification = new OrderSearchSpecification(param);
+        List<Order> searchOrderFor = await OrderRepository.GetOrdersFor(specification);
+        return Ok(Mapper.Map<List<StaffCheckOrderDto>>(searchOrderFor));
     }
 
     [HttpGet("users")]

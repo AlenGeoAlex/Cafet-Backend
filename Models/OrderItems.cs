@@ -1,10 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Cafet_Backend.Models;
 
 public class OrderItems : KeyedEntity<int>
 {
     [ForeignKey("OrderId")]
+    
+    [JsonIgnore]
     public Order Order { get; set; }
     
     public Guid OrderId { get; set; }

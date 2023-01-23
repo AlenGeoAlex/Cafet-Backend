@@ -4,11 +4,13 @@ using AutoMapper;
 using Cafet_Backend.Abstracts;
 using Cafet_Backend.Dto;
 using Cafet_Backend.Dto.InputDtos;
+using Cafet_Backend.Hub;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
 using Cafet_Backend.QueryParams;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 
 namespace Cafet_Backend.Controllers;
@@ -22,9 +24,10 @@ public class OrderController : AbstractController
     public readonly IOrderRepository OrderRepository;
     private readonly IWalletRepository WalletRepository;
     private readonly ICartRepository CartRepository;
+    public readonly IHubContext<OrderHub, IOrderHubClient> OrderHub;
     public readonly IMapper Mapper;
 
-    public OrderController(IUserRepository userRepository, IStockRepository stockRepository, IFoodRepository foodRepository,IOrderRepository orderRepository, IWalletRepository walletRepository, ICartRepository cartRepository ,IMapper mapper)
+    public OrderController(IUserRepository userRepository, IStockRepository stockRepository, IFoodRepository foodRepository,IOrderRepository orderRepository, IWalletRepository walletRepository, ICartRepository cartRepository ,IMapper mapper, IHubContext<OrderHub, IOrderHubClient> orderHub )
     {
         UserRepository = userRepository;
         StockRepository = stockRepository;
@@ -33,6 +36,7 @@ public class OrderController : AbstractController
         WalletRepository = walletRepository;
         CartRepository = cartRepository;
         Mapper = mapper;
+        OrderHub = orderHub;
     }
 
     [HttpPost("me")]
@@ -142,6 +146,63 @@ public class OrderController : AbstractController
         processedOrder.OrderId = order.Id;
         
         return Ok(processedOrder);
+    }
+
+    [HttpGet("complete")]
+    [Authorize(Roles = "Staff")]
+    public async Task<ActionResult<bool>> MarkOrderAsComplete(string orderId)
+    {
+        
+        User? orderedStaffUser = Request.HttpContext.Items["User"] as User;
+        if (orderedStaffUser == null)
+            return Forbid();
+        
+        bool parsed = Guid.TryParse(orderId, out Guid id);
+        if (!parsed)
+        {
+            return BadRequest("orderId is invalid!");
+        }
+
+        Order? orderOfId = await OrderRepository.GetOrderOfId(id);
+
+        if (orderOfId == null)
+        {
+            return BadRequest("orderId is invalid!");
+        }
+        
+        orderOfId.OrderDelivered = DateTime.Now;
+        await OrderRepository.SaveAsync();
+        await OrderHub.Clients.All.OrderCompleted(orderOfId.Id.ToString());
+        return Ok(true);
+    }
+    
+    [HttpGet("reject")]
+    [Authorize(Roles = "Staff")]
+    public async Task<ActionResult<bool>> MarkOrderAsReject(string orderId)
+    {
+        
+        User? orderedStaffUser = Request.HttpContext.Items["User"] as User;
+        if (orderedStaffUser == null)
+            return Forbid();
+        
+        bool parsed = Guid.TryParse(orderId, out Guid id);
+        if (!parsed)
+        {
+            return BadRequest("orderId is invalid!");
+        }
+
+        Order? orderOfId = await OrderRepository.GetOrderOfId(id);
+
+        if (orderOfId == null)
+        {
+            return BadRequest("orderId is invalid!");
+        }
+
+        orderOfId.Cancelled = true;
+        orderOfId.OrderCancelled = DateTime.Now;
+        await OrderRepository.SaveAsync();
+        await OrderHub.Clients.All.OrderCancelled(orderOfId.Id.ToString());
+        return Ok(true);
     }
 
 }

@@ -1,6 +1,7 @@
 using System.Reflection;
 using Cafet_Backend;
 using Cafet_Backend.Extensions;
+using Cafet_Backend.Hub;
 using Cafet_Backend.Middleware;
 using Microsoft.OpenApi.Models;
 
@@ -12,6 +13,7 @@ builder.Services.AddControllers();
 builder.InitServices();
 builder.ConfigureAuthentication();
 builder.CreateCorsPolicy();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(option =>
@@ -71,6 +73,8 @@ app.UseMiddleware<JwtMiddleware>();
 
 app.UseStatusCodePages();
 app.UseStaticFiles();
+
+app.MapHub<OrderHub>("api/live/order");
 
 app.MapControllers();
 
