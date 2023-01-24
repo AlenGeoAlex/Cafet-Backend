@@ -142,12 +142,13 @@ public class UsersController : AbstractController
     }
 
     [HttpPost("update")]
+    [Authorize(Roles = "Admin, Staff, Customer")]
     public async Task<ActionResult<UserDto>> UpdateProfile()
     {
         User? requestAuthor = Request.HttpContext.Items["User"] as User;
         
         if(requestAuthor == null)
-            return Forbid("Failed to locate the author of the request!");
+            return Forbid();
 
         IFormCollection collection = await Request.ReadFormAsync();
         var EmailAddress = collection["EmailAddress"];
@@ -186,4 +187,16 @@ public class UsersController : AbstractController
         return Ok(Mapper.Map<UserDto>(changed));
     }
 
+    [HttpGet("wallet-history")]
+    public async Task<ActionResult<WalletHistoryDto>> GetWalletHistoryOfPlayer([FromQuery] WalletHistorySpecificationParam param)
+    {
+        User? requestAuthor = Request.HttpContext.Items["User"] as User;
+        
+        if(requestAuthor == null)
+            return Forbid();
+
+        List<WalletHistory> histories = await  WalletRepository.GetWalletTransactionsOf(requestAuthor.Id, new WalletHistorySpecification(param));
+        List<WalletHistoryDto> walletHistoryDtos = Mapper.Map<List<WalletHistoryDto>>(histories);
+        return Ok(walletHistoryDtos);
+    }
 }

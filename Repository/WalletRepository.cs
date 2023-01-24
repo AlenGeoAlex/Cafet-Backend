@@ -3,6 +3,7 @@ using Cafet_Backend.Context;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Manager;
 using Cafet_Backend.Models;
+using Cafet_Backend.Provider;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cafet_Backend.Repository;
@@ -126,9 +127,10 @@ public class WalletRepository : IWalletRepository
         return rec.WalletBalance;
     }
 
-    public async Task<List<WalletHistory>> GetWalletTransactionsOf(int userId)
+    public async Task<List<WalletHistory>> GetWalletTransactionsOf(int userId,
+        WalletHistorySpecification? specification = null)
     {
-        return await Context.WalletHistories
+        return await SpecificationProvider<WalletHistory, int>.GetQuery(Context.Set<WalletHistory>(), specification)
             .Include(wh => wh.Sender)
             .Include(wh => wh.Recipient)
             .Where(wh => wh.RecipientId == userId)

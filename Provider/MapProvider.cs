@@ -71,7 +71,13 @@ public class MapProvider : Profile
             .ForMember(dto => dto.FoodPrice, o => o.MapFrom(d => d.Food.FoodPrice))
             .ForMember(dto => dto.FoodQuantity, o => o.MapFrom(d => d.Quantity))
             .ForMember(dto => dto.FoodImageUrl, o => o.MapFrom<StaffCheckOrderImageResolver>());
-            
+
+        CreateMap<WalletHistory, WalletHistoryDto>()
+            .ForMember(dto => dto.Date, o => o.MapFrom(wh => wh.RechargeTime.Date.ToShortDateString()))
+            .ForMember(dto => dto.Time, o => o.MapFrom(wh => wh.RechargeTime.ToShortTimeString()))
+            .ForMember(dto => dto.Amount, o => o.MapFrom(wh => wh.Amount))
+            .ForMember(dto => dto.FailReason, o => o.MapFrom(wh => wh.FailReason))
+            .ForMember(dto => dto.Credit, o => o.MapFrom(wh => wh.Credit));
 
     }
 }

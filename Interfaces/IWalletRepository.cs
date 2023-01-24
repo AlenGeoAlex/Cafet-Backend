@@ -11,5 +11,5 @@ public interface IWalletRepository
 
     Task<double> GetBalanceOf(int userId);
 
-    Task<List<WalletHistory>> GetWalletTransactionsOf(int userId);
+    Task<List<WalletHistory>> GetWalletTransactionsOf(int userId, WalletHistorySpecification? specification = null);
 }
