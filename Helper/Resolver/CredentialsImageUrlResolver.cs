@@ -18,6 +18,9 @@ public class CredentialsImageUrlResolver : IValueResolver<User, CredentialsDto, 
     {
         if (string.IsNullOrEmpty(source.ProfileImage))
             return null;
+
+        if (source.ProfileImage.StartsWith("https://"))
+            return source.ProfileImage;
         
         return $"{Config["apiUrl"]}_images/_user/{source.ProfileImage}";
 

@@ -8,10 +8,10 @@ public class ImageProviderManager
     public readonly AbstractImageProvider FoodImageProvider;
     public readonly AbstractImageProvider UserImageProvider;
     private readonly IWebHostEnvironment _webHostEnvironment;
-    public ImageProviderManager(IWebHostEnvironment webHostEnvironment)
+    public ImageProviderManager(IWebHostEnvironment webHostEnvironment, ILogger<AbstractImageProvider> logger)
     {
         this._webHostEnvironment = webHostEnvironment;
-        this.FoodImageProvider = new FoodImageProvider(webHostEnvironment);
-        this.UserImageProvider = new UserImageProvider(webHostEnvironment);
+        this.FoodImageProvider = new FoodImageProvider(webHostEnvironment, logger);
+        this.UserImageProvider = new UserImageProvider(webHostEnvironment, logger);
     }
 }

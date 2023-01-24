@@ -4,7 +4,7 @@ namespace Cafet_Backend.Provider.Image;
 
 public class FoodImageProvider : AbstractImageProvider
 {
-    public FoodImageProvider(IWebHostEnvironment environment) : base("_food", environment)
+    public FoodImageProvider(IWebHostEnvironment environment, ILogger<AbstractImageProvider> logger) : base("_food", environment, logger)
     {
     }
 }

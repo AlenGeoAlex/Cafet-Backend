@@ -6,21 +6,20 @@ public abstract class AbstractImageProvider
     protected readonly string ProviderName;
     protected readonly string ProviderDirectory;
     protected readonly string BaseImageDirectory;
+    protected readonly ILogger<AbstractImageProvider> Logger;
 
-    protected AbstractImageProvider(string providerName, IWebHostEnvironment hostEnvironment)
+    protected AbstractImageProvider(string providerName, IWebHostEnvironment hostEnvironment, ILogger<AbstractImageProvider> logger)
     {
-        
+        Logger = logger;
         BaseImageDirectory = $"{hostEnvironment.WebRootPath}" +
                              $"{Path.DirectorySeparatorChar}" +
                              $"_images" +
                              $"{Path.DirectorySeparatorChar}";
         
-        Console.WriteLine(BaseImageDirectory);
         ProviderName = providerName;
         
         ProviderDirectory = $"{BaseImageDirectory}" +
                             $"{providerName.ToLower()}";
-        Console.WriteLine(ProviderDirectory);
         
         InitDirectory();
     }
@@ -29,7 +28,7 @@ public abstract class AbstractImageProvider
         if (!Directory.Exists(ProviderDirectory))
         {
             Directory.CreateDirectory(ProviderDirectory);
-            Console.WriteLine("Created directory "+ProviderDirectory);
+           Logger.LogInformation("Created directory "+ProviderDirectory);
         }
     }
 
@@ -56,7 +55,15 @@ public abstract class AbstractImageProvider
 
     public void Delete(string fileName)
     {
-        File.Delete(fileName);
+        try
+        {
+            if(Exists(AsFileName(fileName)))
+                File.Delete(fileName);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError("Failed to delete file "+fileName);
+        }
     }
 
     public string GetDefaultImageName()

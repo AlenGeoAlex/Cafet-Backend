@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Globalization;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using AutoMapper;
@@ -9,6 +10,7 @@ using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
 using Cafet_Backend.Provider;
 using Cafet_Backend.QueryParams;
+using Google.Apis.Auth;
 using JwtUtils.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -83,6 +85,83 @@ public class AuthController : AbstractController
         credentialsDto.RefreshToken = refreshToken;
 
         return Ok(credentialsDto);
+    }
+
+    [HttpPost("social-login/")]
+    [ProducesResponseType(typeof(BadRequestObjectResult), 400)]
+    [ProducesResponseType(typeof(CredentialsDto), 201)]
+    public async Task<IActionResult> SocialLogin([FromBody] SocialUser socialUser)
+    {
+        User? exists = await _userRepository.GetUserOfEmail(socialUser.Email);
+        if (exists != null)
+        {
+            GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
+            settings.Audience = new List<string>() { "" };
+            try
+            {
+                GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(socialUser.IdToken, settings);
+            }
+            catch (Exception e)
+            {
+                return Unauthorized("Invalid Credentials Provided!");
+            }
+
+            List<Claim> claims = new List<Claim>()
+            {
+                new Claim(JwtRegisteredClaimNames.NameId, exists.Id.ToString()),
+                new Claim("role", exists.Role.RoleName),
+            };
+
+            string userToken = TokenService.CreateToken(claims);
+            string refreshToken = await RefreshTokenManager.GenerateAndStoreRefreshToken(exists.Id);
+        
+            CredentialsDto credentialsDto = mapper.Map<User, CredentialsDto>(exists);
+            credentialsDto.AccessToken = userToken;
+            credentialsDto.RefreshToken = refreshToken;
+            return Ok(credentialsDto);
+        }
+        else
+        {
+            TextInfo textInfo = new CultureInfo("en-US",false).TextInfo;
+
+            RegistrationParam param = new RegistrationParam()
+            {
+                EmailAddress = socialUser.Email,
+                FirstName = textInfo.ToTitleCase(socialUser.FirstName),
+                LastName = textInfo.ToTitleCase(socialUser.LastName),
+                Role = Role.Customer.RoleName,
+            };
+            
+            
+            User? user = await _userRepository.TryRegister(param);
+            if(user == null)
+            {
+                return BadRequest("Failed to generate the user");
+            }
+
+            user.ProfileImage = socialUser.PhotoUrl;
+            await _userRepository.SaveAsync();
+            user = await _userRepository.GetUserOfEmail(user.EmailAddress);
+            if (user == null)
+            {
+                return BadRequest("Failed to register the user");
+            }
+        
+            List<Claim> claims = new List<Claim>()
+            {
+                new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
+                new Claim("role", user.Role.RoleName),
+
+            };
+
+            string userToken = TokenService.CreateToken(claims);
+            string refreshToken = await RefreshTokenManager.GenerateAndStoreRefreshToken(user.Id);
+
+            CredentialsDto credentialsDto = mapper.Map<User, CredentialsDto>(user);
+            credentialsDto.AccessToken = userToken;
+            credentialsDto.RefreshToken = refreshToken;
+            return Ok(credentialsDto);
+        }
     }
 
     [HttpPost("register/")]
