@@ -6,6 +6,7 @@ using Cafet_Backend.Interfaces;
 using Cafet_Backend.Manager;
 using Cafet_Backend.Models;
 using Cafet_Backend.QueryParams;
+using Cafet_Backend.Specification;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,12 +16,14 @@ public class UsersController : AbstractController
 {
     private readonly IUserRepository UserRepository;
     private readonly IWalletRepository WalletRepository;
+    private readonly IOrderRepository OrderRepository;
     private readonly IMapper Mapper;
 
-    public UsersController(IUserRepository userRepository, IMapper mapper, IWalletRepository walletRepository, MailModelManager mailModelManager)
+    public UsersController(IUserRepository userRepository, IMapper mapper, IWalletRepository walletRepository, IOrderRepository orderRepository, MailModelManager mailModelManager)
     {
         UserRepository = userRepository;
         WalletRepository = walletRepository;
+        OrderRepository = orderRepository;
         Mapper = mapper;
     }
 
@@ -198,5 +201,21 @@ public class UsersController : AbstractController
         List<WalletHistory> histories = await  WalletRepository.GetWalletTransactionsOf(requestAuthor.Id, new WalletHistorySpecification(param));
         List<WalletHistoryDto> walletHistoryDtos = Mapper.Map<List<WalletHistoryDto>>(histories);
         return Ok(walletHistoryDtos);
+    }
+
+    [HttpGet("my-orders")]
+    public async Task<ActionResult<StaffCheckOrderDto>> GetOrdersOf([FromQuery] OrderHistorySpecificationParam param)
+    {
+        User? requestAuthor = Request.HttpContext.Items["User"] as User;
+        
+        if(requestAuthor == null)
+            return Forbid();
+
+        OrderHistorySpecification specification = new OrderHistorySpecification(param);
+        specification.AddFilterCondition(x => x.OrderPlacedForId == requestAuthor.Id);
+
+        List<Order> orders = await OrderRepository.GetOrdersFor(specification);
+
+        return Ok(Mapper.Map<List<StaffCheckOrderDto>>(orders));
     }
 }
