@@ -2,6 +2,9 @@
 using Cafet_Backend.Context;
 using Cafet_Backend.Dto;
 using Cafet_Backend.Interfaces;
+using Cafet_Backend.Models;
+using Cafet_Backend.Provider;
+using Cafet_Backend.Specification;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cafet_Backend.Repository;
@@ -62,5 +65,47 @@ public class StatisticsRepository : IStatisticsRepository
             .OrderByDescending(x => x.Quantity)
             .Take(count)
             .ToListAsync();
+    }
+
+    public async Task<int> GetTotalOrderCount()
+    {
+        return await Context.Orders.CountAsync();
+    }
+
+    public async Task<int> GetUserCount()
+    {
+        return await Context.Users.CountAsync();
+    }
+
+    public async Task<int> GetOrderCountBy(Specification<Order> specification)
+    {
+        return await SpecificationProvider<Order, Guid>.GetQuery(Context.Set<Order>(), specification)
+            .CountAsync();
+    }
+
+    public async Task<double> GetCostReturn(Specification<Order> specification)
+    {
+        return await SpecificationProvider<Order, Guid>.GetQuery(Context.Set<Order>(), specification).SumAsync(x => x.OrderAmount);
+    }
+    
+    public async Task<StatisticsDto> GetCurrentStatistics()
+    {
+        Specification<Order> specification = new Specification<Order>();
+        specification.AddFilterCondition(x => x.OrderDelivered != null);
+
+        int userCount = await GetUserCount();
+        int orderCountBy = await GetOrderCountBy(specification);
+        double costReturn = await GetCostReturn(specification);
+        int totalOrderCount = await GetTotalOrderCount();
+
+        StatisticsDto statisticsDto = new StatisticsDto()
+        {
+            CompletedOrders = orderCountBy,
+            CostEarned = costReturn,
+            TotalOrders = totalOrderCount,
+            UserCount = userCount
+        };
+
+        return statisticsDto;
     }
 }

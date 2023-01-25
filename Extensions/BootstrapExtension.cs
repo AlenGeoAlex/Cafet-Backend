@@ -10,6 +10,7 @@ using Cafet_Backend.Manager;
 using Cafet_Backend.Provider;
 using Cafet_Backend.Provider.RTProvider;
 using Cafet_Backend.Repository;
+using Cafet_Backend.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
@@ -47,7 +48,9 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddSingleton(typeof(TokenService));
         applicationBuilder.Services.AddSingleton(typeof(MailModelManager));
         applicationBuilder.Services.AddScoped<IMailService, MailService>();
-        
+
+        applicationBuilder.Services.AddHostedService<StatisticsHostService>();
+        applicationBuilder.Services.AddScoped<IScopedProcessingService, ScopedStatisticsService>();        
         if (options.RefreshTokenSettings.CacheMethod == "MEMORY")
         {
             applicationBuilder.Services.AddScoped<AbstractRefreshTokenManager, InMemoryProvider>();

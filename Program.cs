@@ -75,6 +75,7 @@ app.UseStatusCodePages();
 app.UseStaticFiles();
 
 app.MapHub<OrderHub>("api/live/order");
+app.MapHub<StatisticsHub>("api/live/stats");
 
 app.MapControllers();
 
