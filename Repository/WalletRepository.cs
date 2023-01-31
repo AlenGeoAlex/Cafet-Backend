@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Globalization;
+using AutoMapper;
 using Cafet_Backend.Context;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Manager;
@@ -107,7 +108,7 @@ public class WalletRepository : IWalletRepository
         await Context.SaveChangesAsync();
 
         bool mailAsync = await MailService.SendMailAsync(MailModelManager.WalletRecharge, rec.EmailAddress,
-            new string[] { amount.ToString() });
+            new string[] { amount.ToString(CultureInfo.InvariantCulture) });
 
         if (!mailAsync)
         {

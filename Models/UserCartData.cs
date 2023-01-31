@@ -11,6 +11,7 @@ public class UserCartData : KeyedEntity<int>
     public Food Food { get; set; }
     
     [JsonIgnore]
+    [ForeignKey("CartId")]
     public virtual Cart Cart { get; set; }
     
     public Guid CartId { get; set; }

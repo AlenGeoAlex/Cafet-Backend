@@ -154,7 +154,7 @@ public class UserRepository : IUserRepository
             FirstName = param.FirstName,
             LastName = param.LastName,
             Cart = cart,
-            CartId = cart.CartId,
+            CartId = cart.Id,
             RoleId = roleData.Id,
             Activated = true,
             Deleted = false,

@@ -10,7 +10,7 @@ public class User : KeyedEntity<int>
         Id = -1,
         FirstName = "Cafet",
         LastName = "Admin",
-        CartId = Models.Cart.DummyCart.CartId,
+        CartId = Models.Cart.DummyCart.Id,
         EmailAddress = "admin@cafet.com",
         RoleId = Models.Role.Administrator.Id, 
         WalletBalance = 0.0,

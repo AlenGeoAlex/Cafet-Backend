@@ -23,7 +23,7 @@ public class CartRepository : ICartRepository
 
     public async Task<bool> DeleteCart(Guid cartId)
     {
-        Cart? cartOrDefault = await CafeContext.Carts.FirstOrDefaultAsync(cart => cart.CartId == cartId);
+        Cart? cartOrDefault = await CafeContext.Carts.FirstOrDefaultAsync(cart => cart.Id == cartId);
         if (cartOrDefault == null)
             return false;
 
@@ -100,6 +100,7 @@ public class CartRepository : ICartRepository
             else
             {
                 firstOrDefault.Quantity = cartAddition.Quantity;
+                firstOrDefault.LastUpdated = DateTime.Now;
                 await CafeContext.SaveChangesAsync();
                 return firstOrDefault;
             }
@@ -128,7 +129,7 @@ public class CartRepository : ICartRepository
             .Include(c => c.FoodCartData)
             .ThenInclude(c => c.Food)
             .ThenInclude(c => c.Category)
-            .FirstOrDefaultAsync(c => c.CartId == user.CartId);
+            .FirstOrDefaultAsync(c => c.Id == user.CartId);
         //Check if user has a cart and if not create a new cart and attach it to the user.
         //A save db has been called here to update the new changes and get the new id of the cart
         if (cartOfUser == null)
@@ -143,10 +144,10 @@ public class CartRepository : ICartRepository
             };
 
             
-            user.CartId = cart.CartId;
+            user.CartId = cart.Id;
             cartOfUser = cart;
             await CafeContext.SaveChangesAsync();
-            Logger.LogWarning("Loaded new cart for user "+user.EmailAddress+" with id "+cart.CartId);
+            Logger.LogWarning("Loaded new cart for user "+user.EmailAddress+" with id "+cart.Id);
         }
 
         return cartOfUser;
@@ -159,7 +160,7 @@ public class CartRepository : ICartRepository
 
         CartDto dto = new CartDto()
         {
-            CartId = cart.CartId.ToString(),
+            CartId = cart.Id.ToString(),
             CartData = new List<CartDataDto>(),
             LastUpdated = DateTime.Now.ToShortTimeString(),
         };
@@ -211,6 +212,6 @@ public class CartRepository : ICartRepository
     {
         return await CafeContext.Carts
             .Include(x => x.FoodCartData)
-            .FirstOrDefaultAsync(cart => cart.CartId == cartId);
+            .FirstOrDefaultAsync(cart => cart.Id == cartId);
     }
 }

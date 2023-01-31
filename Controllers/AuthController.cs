@@ -206,7 +206,7 @@ public class AuthController : AbstractController
         credentialsDto.AccessToken = userToken;
         credentialsDto.RefreshToken = refreshToken;
 
-        return Created("/user/"+userOfEmail.Id,JsonConvert.SerializeObject(credentialsDto));
+        return Created("/user/"+userOfEmail.Id, credentialsDto);
     }
 
     [HttpPost("reset-pass")]

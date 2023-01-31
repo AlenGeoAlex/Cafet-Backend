@@ -23,7 +23,7 @@ public class MapProvider : Profile
             .ForMember(dto => dto.UserEmailAddress, o => o.MapFrom(user => user.EmailAddress))
             .ForMember(dto => dto.UserFullName, o => o.MapFrom(user => user.FullName))
             .ForMember(dto => dto.UserRole, o => o.MapFrom(user => user.Role.RoleName))
-            .ForMember(dto => dto.CartId, o => o.MapFrom(user => user.Cart.CartId))
+            .ForMember(dto => dto.CartId, o => o.MapFrom(user => user.Cart.Id))
             .ForMember(dto => dto.ImageLink, o => o.MapFrom<CredentialsImageUrlResolver>());
 
         CreateMap<User, UserDto>()

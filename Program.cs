@@ -47,6 +47,7 @@ builder.Host.ConfigureLogging(configureLogging =>
 {
     configureLogging.ClearProviders();
     configureLogging.AddConsole();
+    configureLogging.AddFilter("Microsoft.EntityFrameworkCore.Database", LogLevel.Warning);
 });
 
 var app = builder.Build();
