@@ -14,11 +14,13 @@ public class FoodController : AbstractController
     private readonly IFoodRepository FoodRepository;
     private readonly ImageProviderManager ImageProviderManager;
     private readonly IMapper Mapper;
-    public FoodController(IFoodRepository foodRepository, ImageProviderManager imageProviderManager, IMapper mapper)
+    private readonly ILogger<FoodController> FoodLogger;
+    public FoodController(IFoodRepository foodRepository, ImageProviderManager imageProviderManager, IMapper mapper, ILogger<FoodController> foodLogger)
     {
         FoodRepository = foodRepository;
         ImageProviderManager = imageProviderManager;
         Mapper = mapper;
+        FoodLogger = foodLogger;
     }
     
     [HttpGet]
@@ -96,7 +98,6 @@ public class FoodController : AbstractController
             using (FileStream fStream = new FileStream(fullFile, FileMode.Create))
             {
                 await @default.CopyToAsync(fStream);
-                Console.WriteLine("File uploaded "+fullFile);
                 ImageName = fileName;
             }
         }
@@ -158,7 +159,7 @@ public class FoodController : AbstractController
             using (FileStream fStream = new FileStream(fullFile, FileMode.Create))
             {
                 await @default.CopyToAsync(fStream);
-                Console.WriteLine("File uploaded "+fullFile);
+                FoodLogger.LogInformation("File uploaded "+fullFile);
                 ImageName = fileName;
             }
         }

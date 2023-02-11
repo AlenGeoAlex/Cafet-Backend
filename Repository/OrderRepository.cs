@@ -104,6 +104,7 @@ public class OrderRepository : IOrderRepository
 
 
             processedOrders.Add(eachOrderItem);
+            counter += 1;
         }
         
         //Reduce the quantity at last!

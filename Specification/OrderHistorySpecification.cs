@@ -18,9 +18,7 @@ public class OrderHistorySpecification : Specification<Order>
         {
             try
             {
-                Console.WriteLine(param.From);
                 DateTime fromDate = DateTime.Parse(param.From);
-                Console.WriteLine(fromDate.Date);
                 AddFilterCondition(x => x.OrderPlaced.Date >= fromDate.Date);
             }
             catch (Exception e)
@@ -34,9 +32,7 @@ public class OrderHistorySpecification : Specification<Order>
         {
             try
             {
-                Console.WriteLine(param.To);
                 DateTime toDate = DateTime.Parse(param.To);
-                Console.WriteLine(toDate.Date);
                 AddFilterCondition(x => x.OrderPlaced.Date <= toDate.Date);
             }
             catch (Exception e)
