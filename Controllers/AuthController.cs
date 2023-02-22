@@ -11,11 +11,8 @@ using Cafet_Backend.Models;
 using Cafet_Backend.Provider;
 using Cafet_Backend.QueryParams;
 using Google.Apis.Auth;
-using JwtUtils.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
-using Newtonsoft.Json;
 
 namespace Cafet_Backend.Controllers;
 

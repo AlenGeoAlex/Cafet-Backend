@@ -72,9 +72,11 @@ public class FoodRepository : IFoodRepository
         return AsDtoList(foods);
     }
 
-    public Task<bool> ContainsAsync(string foodName)
+    public async Task<bool> ContainsAsync(string foodName, string categoryName)
     {
-        throw new NotImplementedException();
+        return await CafeContext.Foods
+            .Include(f => f.Category)
+            .AnyAsync(f => f.Name == foodName && f.Category.CategoryName == categoryName);
     }
 
     public Task<int> Register(Food? food)

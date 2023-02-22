@@ -28,7 +28,6 @@ public class JwtMiddleware
         if (context.Request.Headers.ContainsKey("Authorization"))
         {
             string authHeader = context.Request.Headers.Authorization;
-            Console.WriteLine(authHeader);
             if (!string.IsNullOrEmpty(authHeader))
             {
 

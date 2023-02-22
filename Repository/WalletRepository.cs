@@ -29,7 +29,7 @@ public class WalletRepository : IWalletRepository
         Logger = walletRepo;
     }
 
-    public async Task<bool> Withdraw(int userId, int byUser, double amount)
+    public async Task<bool> Withdraw(int userId, int byUser, double amount, string reason = null)
     {
         if (amount < 1)
             return false;
@@ -67,7 +67,7 @@ public class WalletRepository : IWalletRepository
         return true;
     }
 
-    public async Task<bool> Credit(int userId, int byUser, double amount)
+    public async Task<bool> Credit(int userId, int byUser, double amount, string reason = null)
     {
         if (amount < 1)
             return false;
@@ -97,7 +97,7 @@ public class WalletRepository : IWalletRepository
             RecipientId = rec.Id,
             SenderId = sender.Id,
             Credit = true,
-            FailReason = null,
+            FailReason = reason,
             Amount = amount,
             RechargeTime = DateTime.Now,
         };

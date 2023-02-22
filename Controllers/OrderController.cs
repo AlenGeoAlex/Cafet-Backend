@@ -200,6 +200,11 @@ public class OrderController : AbstractController
 
         orderOfId.Cancelled = true;
         orderOfId.OrderCancelled = DateTime.Now;
+
+        User orderPlacedFor = orderOfId.OrderPlacedFor;
+        await this.WalletRepository.Credit(orderPlacedFor.Id, orderedStaffUser.Id, orderOfId.OrderAmount,
+            $"Cashback of rejected order {orderId} by {orderedStaffUser.FullName}");
+
         await OrderRepository.SaveAsync();
         await OrderHub.Clients.All.OrderCancelled(orderOfId.Id.ToString());
         return Ok(true);

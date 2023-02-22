@@ -59,7 +59,7 @@ public class CategoryController : AbstractController
     {
         bool contains = await CategoryRepository.ContainsAsync(categoryParams.CategoryName);
         if (contains)
-            return UnprocessableEntity(new ApiException(406, "Duplicate Category Found", $"A category with {categoryParams.CategoryName} already exists in the system!"));
+            return UnprocessableEntity(new ApiException(422, "Duplicate Category Found", $"A category with {categoryParams.CategoryName} already exists in the system!"));
 
         FoodCategory foodCategory = new FoodCategory()
         {

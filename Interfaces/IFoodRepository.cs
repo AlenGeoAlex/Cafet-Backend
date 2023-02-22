@@ -17,7 +17,7 @@ public interface IFoodRepository
 
     Task<IReadOnlyList<FoodDto>> GetFoodOfCategory(int id);
 
-    Task<bool> ContainsAsync(string foodName);
+    Task<bool> ContainsAsync(string foodName, string categoryName);
 
     Task<int> Register(Food? food);
 

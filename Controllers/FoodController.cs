@@ -140,6 +140,10 @@ public class FoodController : AbstractController
         string V = readFormAsync["FoodType"];
         List<string> Tags = new List<string>();
 
+        bool containsAsync = await this.FoodRepository.ContainsAsync(FoodName, CategoryName);
+        if(containsAsync)
+            return UnprocessableEntity(new ApiException(422, "Duplicate Food Item Found", $"A category with {FoodName} already exists in the system!"));
+
         bool Vegeterian = Convert.ToBoolean(V);
         string _tags = readFormAsync["Tags"];
         string[] tagArray = _tags.Split(",");
