@@ -67,7 +67,7 @@ public class WalletRepository : IWalletRepository
         return true;
     }
 
-    public async Task<bool> Credit(int userId, int byUser, double amount, string reason = null)
+    public async Task<bool> Credit(int userId, int byUser, double amount, string reason = null, bool sendMail = true)
     {
         if (amount < 1)
             return false;
@@ -107,6 +107,9 @@ public class WalletRepository : IWalletRepository
         await Context.WalletHistories.AddAsync(walletHistory);
         await Context.SaveChangesAsync();
 
+        if (!sendMail)
+            return true;
+        
         bool mailAsync = await MailService.SendMailAsync(MailModelManager.WalletRecharge, rec.EmailAddress,
             new string[] { amount.ToString(CultureInfo.InvariantCulture) });
 

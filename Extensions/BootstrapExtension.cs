@@ -102,6 +102,12 @@ public static class BootstrapExtension
         {
             applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options);
         });
+
+
+        applicationBuilder.Services.Configure<StripeConfiguration>(opt =>
+        {
+            applicationBuilder.Configuration.GetSection(opt.ConfigBinder()).Bind(opt);
+        });
         
         return applicationBuilder;
     }

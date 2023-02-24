@@ -84,6 +84,40 @@ public class AuthController : AbstractController
         return Ok(credentialsDto);
     }
 
+    [HttpGet("refresh")]
+    [ProducesResponseType(typeof(BadRequestObjectResult), 400)]
+    [ProducesResponseType(typeof(CredentialsDto), 201)]
+    public async Task<IActionResult> Refresh([FromBody] String token)
+    {
+        Tuple<string?,int?> tuple = await this.RefreshTokenManager.RefreshIfValid(token);
+        
+        if(tuple.Item1 == null || !tuple.Item2.HasValue)
+            return Unauthorized("Invalid Credentials Provided!");
+        
+        string refreshToken = tuple.Item1;
+        int userId = tuple.Item2.Value;
+        
+        User? exists = await _userRepository.GetUserOfId(userId);
+        
+        if(exists == null)
+        {
+            return Unauthorized("Invalid Credentials Provided!");
+        }
+        
+        List<Claim> claims = new List<Claim>()
+        {
+            new Claim(JwtRegisteredClaimNames.NameId, exists.Id.ToString()),
+            new Claim("role", exists.Role.RoleName),
+        };
+        
+        string userToken = TokenService.CreateToken(claims);
+
+        CredentialsDto credentialsDto = mapper.Map<User, CredentialsDto>(exists);
+        credentialsDto.AccessToken = userToken;
+        credentialsDto.RefreshToken = refreshToken;
+        return Ok(credentialsDto);
+    }
+
     [HttpPost("social-login/")]
     [ProducesResponseType(typeof(BadRequestObjectResult), 400)]
     [ProducesResponseType(typeof(CredentialsDto), 201)]

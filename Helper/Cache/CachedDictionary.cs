@@ -35,6 +35,11 @@ public class CachedDictionary<TKey, TValue> where TKey : notnull
         }
     }
 
+    public void Remove(TKey key)
+    {
+        this.Caches.Remove(key);
+    }
+    
     public void Set(TKey key, TValue value)
     {
         this.Caches.Add(key, new Cache<TValue>(value, DateTime.Now.AddHours(TTLHours)));

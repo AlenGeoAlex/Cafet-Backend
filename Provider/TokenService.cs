@@ -1,4 +1,5 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Collections.Immutable;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Cafet_Backend.Configuration;
@@ -9,6 +10,9 @@ namespace Cafet_Backend.Provider;
 
 public class TokenService
 {
+
+
+    
     public readonly SymmetricSecurityKey SecurityKey;
     public readonly IOptions<JwtConfig> JwtConfig;
 
@@ -49,6 +53,37 @@ public class TokenService
         SecurityToken securityToken = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(securityToken);
     }
-    
-    
+
+    public IEnumerable<Claim> GetClaimsIfValid(string? token)
+    {
+        if(string.IsNullOrEmpty(token))
+            return ImmutableList<Claim>.Empty;
+        
+        TokenValidationParameters validationParameters = new TokenValidationParameters()
+        {
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtConfig.Value.Token))
+        };
+        
+        var tokenHandler = new JwtSecurityTokenHandler();
+        SecurityToken validatedToken = null;
+        try
+        {
+            tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
+        }
+        catch (Exception ignored)
+        {
+            return ImmutableList<Claim>.Empty;
+        }
+        
+        if(validatedToken == null)
+            return ImmutableList<Claim>.Empty;
+        
+        var jwtToken = (JwtSecurityToken)validatedToken;
+        return jwtToken.Claims.ToImmutableList();
+    }
 }

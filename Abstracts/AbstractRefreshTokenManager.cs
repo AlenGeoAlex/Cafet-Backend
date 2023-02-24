@@ -17,6 +17,8 @@ public abstract class AbstractRefreshTokenManager
     }
 
     public abstract Task<string> GenerateAndStoreRefreshToken(int userId);
-    
-    
+
+    public abstract Task<Tuple<string?, int?>> RefreshIfValid(string refreshToken);
+
+    public abstract Task InvalidateToken(string refreshToken);
 }
