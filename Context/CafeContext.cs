@@ -108,6 +108,10 @@ public class CafeContext : DbContext
                      .Property(o => o.Cancelled)
                      .HasDefaultValue(false);
 
+                 orderBuilder
+                     .Property(o => o.PaymentStatus)
+                     .HasDefaultValue(PaymentStatus.Pending);
+
                  EntityTypeBuilder<WalletHistory> walletBuilder = modelBuilder.Entity<WalletHistory>();
                  
                  

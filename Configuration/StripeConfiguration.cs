@@ -12,6 +12,10 @@ public class StripeConfiguration : AbstractConfigurationOptions
         Redirections = redirections;
     }
 
+    public StripeConfiguration()
+    {
+    }
+
     public override string ConfigBinder()
     {
         return "Stripe";
@@ -24,9 +28,7 @@ public class Redirections
     
     public string Cancelled { get; set; }
 
-    public Redirections(string success, string cancelled)
+    public Redirections()
     {
-        Success = success;
-        Cancelled = cancelled;
     }
 }

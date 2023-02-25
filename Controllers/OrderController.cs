@@ -11,7 +11,9 @@ using Cafet_Backend.QueryParams;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Stripe.Checkout;
 
 namespace Cafet_Backend.Controllers;
 
@@ -25,9 +27,10 @@ public class OrderController : AbstractController
     private readonly IWalletRepository WalletRepository;
     private readonly ICartRepository CartRepository;
     public readonly IHubContext<OrderHub, IOrderHubClient> OrderHub;
+    public readonly IStripeSessionManager StripeSessionManager;
     public readonly IMapper Mapper;
 
-    public OrderController(IUserRepository userRepository, IStockRepository stockRepository, IFoodRepository foodRepository,IOrderRepository orderRepository, IWalletRepository walletRepository, ICartRepository cartRepository ,IMapper mapper, IHubContext<OrderHub, IOrderHubClient> orderHub )
+    public OrderController(IUserRepository userRepository, IStripeSessionManager stripeSessionManager ,IStockRepository stockRepository, IFoodRepository foodRepository,IOrderRepository orderRepository, IWalletRepository walletRepository, ICartRepository cartRepository ,IMapper mapper, IHubContext<OrderHub, IOrderHubClient> orderHub)
     {
         UserRepository = userRepository;
         StockRepository = stockRepository;
@@ -37,6 +40,7 @@ public class OrderController : AbstractController
         CartRepository = cartRepository;
         Mapper = mapper;
         OrderHub = orderHub;
+        StripeSessionManager = stripeSessionManager;
     }
 
     [HttpPost("me")]
@@ -66,9 +70,40 @@ public class OrderController : AbstractController
             {
                 return BadRequest("Failed to transfer wallet balance!");
             }
+            
+            Order? completed = await OrderRepository.CreateOrder(processedOrder, orderedCustomer, orderedCustomer);
+
+            if (completed == null)
+            {
+                return BadRequest("Failed to place the order! Try again!");
+            }
+
+            processedOrder.OrderId = completed.Id;
+            await CartRepository.ClearCart(orderedCustomer.CartId);
+            return Ok(processedOrder);
         }
 
-        Order? order = await OrderRepository.CreateOrder(processedOrder, orderedCustomer, orderedCustomer);
+        Order? orderForPayment = await OrderRepository.CreateOrderForPayment(processedOrder, orderedCustomer, orderedCustomer);
+        Dictionary<string,string> metadata = new Dictionary<string, string>();
+
+        if (orderForPayment == null)
+        {
+            return BadRequest("Failed to place the order! Try again!");
+        }
+        
+        metadata.Add("OrderId", orderForPayment.Id.ToString());
+
+        Session? session = await StripeSessionManager.CreateCheckoutSessionFor(orderForPayment);
+        
+        if (session == null)
+        {
+            return BadRequest("Failed to redirect to payment gateway!");
+        }
+        
+        await CartRepository.ClearCart(orderedCustomer.CartId);
+        return Ok(new StripeSessionUrl(session.Url));
+
+        /*Order? order = await OrderRepository.CreateOrder(processedOrder, orderedCustomer, orderedCustomer);
 
         if (order == null)
         {
@@ -77,7 +112,7 @@ public class OrderController : AbstractController
 
         processedOrder.OrderId = order.Id;
         await CartRepository.ClearCart(orderedCustomer.CartId);
-        return Ok(processedOrder);
+        return Ok(processedOrder);*/
     }
 
     [HttpPost("staff")]
@@ -135,6 +170,8 @@ public class OrderController : AbstractController
                 return BadRequest("Failed to transfer wallet balance!");
             }
         }
+
+
 
         Order? order = await OrderRepository.CreateOrder(processedOrder, orderedStaffUser, userOfEmail);
 

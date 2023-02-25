@@ -50,4 +50,7 @@ public class OrderHistorySpecificationParam
     public string? To { get; set; }
     
     public bool OnlyActive { get; set; }
+    
+    public int? PaymentStatus { get; set; }
+    
 }

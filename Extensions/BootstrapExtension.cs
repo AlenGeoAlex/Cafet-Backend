@@ -22,14 +22,20 @@ namespace Cafet_Backend.Extensions;
 
 public static class BootstrapExtension
 {
+    
+    
     public static WebApplicationBuilder InitServices(this WebApplicationBuilder applicationBuilder)
     {
         JwtConfig options = new JwtConfig();
         applicationBuilder.Configuration.GetSection(options.ConfigBinder()).Bind(options);
         
+        StripeConfiguration stripeConfiguration = new StripeConfiguration();
+        applicationBuilder.Configuration.GetSection(stripeConfiguration.ConfigBinder()).Bind(stripeConfiguration);
+
+        Stripe.StripeConfiguration.ApiKey = stripeConfiguration.SecretToken;
+        
         applicationBuilder.Services.AddDbContext<CafeContext>(builderOptions =>
         {
-            builderOptions.EnableSensitiveDataLogging(true);
             builderOptions.UseSqlServer(applicationBuilder.Configuration.GetConnectionString("DefaultConnection"));
         });
 
@@ -44,6 +50,7 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddScoped<IWalletRepository, WalletRepository>();
         applicationBuilder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
         applicationBuilder.Services.AddSingleton(typeof(ImageProviderManager));
+        applicationBuilder.Services.AddSingleton<IStripeSessionManager, StripeSessionManager>();
         applicationBuilder.Services.AddAutoMapper(typeof(MapProvider));
         applicationBuilder.Services.AddSingleton(typeof(TokenService));
         applicationBuilder.Services.AddSingleton(typeof(MailModelManager));

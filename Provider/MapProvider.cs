@@ -61,6 +61,7 @@ public class MapProvider : Profile
             .ForMember(dto => dto.IsCompleted, o => o.MapFrom(d => d.OrderDelivered != null))
             .ForMember(dto => dto.IsCancelled, o => o.MapFrom(d => d.Cancelled))
             .ForMember(dto => dto.OrderedFoods, o => o.MapFrom(d => d.OrderItems))
+            .ForMember(dto => dto.PaymentStatus, o => o.MapFrom(d => d.PaymentStatus))
             ;
 
         CreateMap<OrderItems, StaffCheckFoodDto>()

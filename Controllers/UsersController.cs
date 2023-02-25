@@ -213,6 +213,10 @@ public class UsersController : AbstractController
 
         OrderHistorySpecification specification = new OrderHistorySpecification(param);
         specification.AddFilterCondition(x => x.OrderPlacedForId == requestAuthor.Id);
+        if (param.PaymentStatus.HasValue)
+        {
+            specification.AddFilterCondition(x => x.PaymentStatus == (PaymentStatus) param.PaymentStatus.Value);
+        }
 
         List<Order> orders = await OrderRepository.GetOrdersFor(specification);
 

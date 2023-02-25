@@ -53,6 +53,107 @@ public class OrderRepository : IOrderRepository
             .ToListAsync();
     }
 
+    public async Task<Order?> CreateOrderForPayment(ProcessedOrder processedOrder, User orderPlacedBy,
+        User orderPlacedFor)
+    {
+        if (!processedOrder.OrderSuccessful)
+            return null;
+
+        List<OrderItems> processedOrders = new List<OrderItems>();
+        List<int> allPossibleFoodId = processedOrder.GetAllFoodIds();
+        List<Food> foodList = await CafeContext.Foods
+            .Where(fo => allPossibleFoodId.Contains(fo.Id))
+            .ToListAsync();
+        
+        foreach (KeyValuePair<int,bool> foodIdOrderStatus in processedOrder.OrderStatus)
+        {
+            
+            int foodId = foodIdOrderStatus.Key;
+            Food? @default = foodList.FirstOrDefault(f => f.Id ==foodId);
+            if (@default == null)
+            {
+                Logger.LogWarning("Failed to get the food of id "+foodId);
+                return null;
+            }
+
+            if (!processedOrder.OrderFoodQuantity.ContainsKey(@default.Id))
+            {
+                Logger.LogWarning("Failed to get the quantity of food of id "+foodId);
+                return null;
+            }
+            
+            OrderItems eachOrderItem = new OrderItems()
+            {
+                FoodId = @default.Id,
+                FoodName = @default.Name,
+                FoodPrice = @default.FoodPrice,
+                Quantity = processedOrder.OrderFoodQuantity[@default.Id]
+            };
+
+
+            processedOrders.Add(eachOrderItem);
+        }
+        
+                
+        //Reduce the quantity at last!
+        foreach (KeyValuePair<int,int> foodIdQuantityMap in processedOrder.OrderFoodQuantity)
+        {
+            int foodId = foodIdQuantityMap.Key;
+            int quantity = foodIdQuantityMap.Value;
+            
+            
+            DailyStock? dailyStock = await CafeContext.Stocks.FirstOrDefaultAsync(s => s.FoodId == foodId);
+            
+            if (dailyStock == null)
+                return null;
+
+            if (dailyStock.CurrentStock < quantity)
+                return null;
+
+            dailyStock.CurrentStock -= quantity;
+        }
+
+        Order order = new Order()
+        {
+            OrderAmount = processedOrder.OrderCost,
+            OrderItems = processedOrders,
+            OrderDelivered = null,
+            OrderPlaced = DateTime.Now,
+            OrderPlacedById = orderPlacedBy.Id,
+            OrderPlacedForId = orderPlacedFor.Id,
+            PaymentStatus = PaymentStatus.Pending,
+            WalletPayment = false
+        };
+
+        await CafeContext.Orders.AddAsync(order);
+        await CafeContext.SaveChangesAsync();
+        
+        return order;
+
+    }
+
+    public async Task<string?> MarkOrderAsComplete(Guid orderId)
+    {
+        Order? orderOfId = await GetOrderOfId(orderId);
+        if (orderOfId == null)
+        {
+            return "An unknown order was provided";
+        }
+
+
+        if (orderOfId.PaymentStatus != PaymentStatus.Pending)
+        {
+            return "The order was already completed!";
+        }
+
+        orderOfId.PaymentStatus = PaymentStatus.Success;
+        await CafeContext.SaveChangesAsync();
+        await OrderHub.Clients.All.SendOrderUpdate(Mapper.Map<StaffCheckOrderDto>(orderOfId));
+
+        Logger.LogInformation($"Created a new order for {orderOfId.OrderPlacedFor.EmailAddress} with id {orderId.ToString()}");
+        return null;
+    }
+
     public async Task<Order?> CreateOrder(ProcessedOrder processedOrder, User orderPlacedBy, User orderPlacedFor)
     {
         if (!processedOrder.OrderSuccessful)
@@ -132,11 +233,14 @@ public class OrderRepository : IOrderRepository
             OrderDelivered = null,
             OrderPlaced = DateTime.Now,
             OrderPlacedById = orderPlacedBy.Id,
-            OrderPlacedForId = orderPlacedFor.Id
+            OrderPlacedForId = orderPlacedFor.Id,
+            PaymentStatus = PaymentStatus.Success,
+            WalletPayment = true
         };
 
         await CafeContext.Orders.AddAsync(order);
         await CafeContext.SaveChangesAsync();
+        await OrderHub.Clients.All.SendOrderUpdate(Mapper.Map<StaffCheckOrderDto>(order));
 
         Logger.LogInformation($"Created a new order for {orderPlacedFor.EmailAddress} with id {order.Id}");
         string[] mailBodyPlaceholder = new string[]
@@ -162,7 +266,6 @@ public class OrderRepository : IOrderRepository
             Logger.LogWarning("Failed to send order email to "+orderPlacedFor.EmailAddress);
         }
 
-        await OrderHub.Clients.All.SendOrderUpdate(Mapper.Map<StaffCheckOrderDto>(order));
 
         return order;
     }
