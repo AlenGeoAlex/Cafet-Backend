@@ -48,10 +48,15 @@ public class PaymentController : AbstractController
                     session = stripeEvent.Data.Object as Session;
                     if (session == null)
                     {
-                        Console.WriteLine(123);
                         return BadRequest("The checkout session is unknown");
                     }
 
+
+                    if (session.PaymentStatus != "paid")
+                    {
+                        return BadRequest("The checkout session is unknown");
+                    }
+                    
                     if (!session.Metadata.ContainsKey("OrderId"))
                     {
                         return BadRequest("An unknown order id was provided");
@@ -99,6 +104,16 @@ public class PaymentController : AbstractController
                     {
                         return BadRequest("An unknown order was provided");
                     }
+
+                    string? markOrderAsFailed = await OrderRepository.MarkOrderAsFailed(orderId,
+                        "Failed payment gateway response has been received.");
+
+                    if (string.IsNullOrEmpty(markOrderAsFailed))
+                    {
+                        return Ok();
+                    }
+
+                    return BadRequest(markOrderAsFailed);
                 }
                     break;
             }

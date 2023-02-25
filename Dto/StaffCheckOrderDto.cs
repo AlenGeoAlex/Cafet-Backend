@@ -10,8 +10,9 @@ public class StaffCheckOrderDto
     public bool IsCompleted { get; set; }
     public bool IsCancelled { get; set; }
     public List<StaffCheckFoodDto> OrderedFoods { get; set; }
-    
     public int PaymentStatus { get; set; }
+    public string? PaymentStatusUpdatedAt { get; set; }
+    public string? PaymentFailStatusReason { get; set; }
 }
 
 public class StaffCheckFoodDto

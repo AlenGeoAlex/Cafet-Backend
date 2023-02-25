@@ -61,6 +61,9 @@ public class MapProvider : Profile
             .ForMember(dto => dto.IsCompleted, o => o.MapFrom(d => d.OrderDelivered != null))
             .ForMember(dto => dto.IsCancelled, o => o.MapFrom(d => d.Cancelled))
             .ForMember(dto => dto.OrderedFoods, o => o.MapFrom(d => d.OrderItems))
+            .ForMember(dto => dto.PaymentFailStatusReason, o => o.MapFrom(d => d.PaymentFailedReason))
+            .ForMember(dto => dto.PaymentStatusUpdatedAt, o => o.MapFrom(d => d.PaymentStatusUpdatedAt))
+
             .ForMember(dto => dto.PaymentStatus, o => o.MapFrom(d => d.PaymentStatus))
             ;
 

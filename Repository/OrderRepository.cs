@@ -10,6 +10,7 @@ using Cafet_Backend.Provider;
 using Cafet_Backend.Specification;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Cafet_Backend.Repository;
 
@@ -147,11 +148,79 @@ public class OrderRepository : IOrderRepository
         }
 
         orderOfId.PaymentStatus = PaymentStatus.Success;
+        orderOfId.PaymentStatusUpdatedAt = DateTime.Now;
         await CafeContext.SaveChangesAsync();
         await OrderHub.Clients.All.SendOrderUpdate(Mapper.Map<StaffCheckOrderDto>(orderOfId));
 
         Logger.LogInformation($"Created a new order for {orderOfId.OrderPlacedFor.EmailAddress} with id {orderId.ToString()}");
         return null;
+    }
+    
+    public async Task<string?> MarkOrderAsFailed(Guid orderId, string reason = null)
+    {
+        Order? orderOfId = await GetOrderOfId(orderId);
+        if (orderOfId == null)
+        {
+            return "An unknown order was provided";
+        }
+
+
+        if (orderOfId.PaymentStatus != PaymentStatus.Pending)
+        {
+            return "The order was already completed!";
+        }
+
+        orderOfId.PaymentStatus = PaymentStatus.Cancelled;
+        orderOfId.PaymentStatusUpdatedAt = DateTime.Now;
+        orderOfId.PaymentFailedReason = reason;
+
+        await MakeupFailedOrderStock(orderId);
+        
+        await CafeContext.SaveChangesAsync();
+
+        Logger.LogInformation($"The order of {orderId} was ticked as failed for reason {reason}");
+        return null;
+    }
+
+    public async Task<bool> MakeupFailedOrderStock(Guid orderId)
+    {
+        Order? orderOfId = await GetOrderOfId(orderId);
+        if (orderOfId == null)
+        {
+            return false;
+        }
+        
+        if (orderOfId.PaymentStatus != PaymentStatus.Pending)
+        {
+            return false;
+        }
+
+        List<OrderItems> orderItemsList = orderOfId.OrderItems;
+        IDbContextTransaction beginTransactionAsync = await CafeContext.Database.BeginTransactionAsync();
+        foreach (OrderItems orderItems in orderItemsList)
+        {
+            DailyStock? dailyStock = await CafeContext.Stocks
+                .Where(s => s.FoodId == orderItems.FoodId)
+                .FirstOrDefaultAsync();
+
+            if (dailyStock != null)
+            {
+                dailyStock.CurrentStock += orderItems.Quantity;
+                continue;
+            }
+
+            DailyStock stock = new DailyStock()
+            {
+                FoodId = orderItems.FoodId,
+                CurrentStock = orderItems.Quantity,
+                FoodStock = orderItems.Quantity
+            };
+
+            await CafeContext.Stocks.AddAsync(stock);
+        }
+
+        await beginTransactionAsync.CommitAsync();
+        return true;
     }
 
     public async Task<Order?> CreateOrder(ProcessedOrder processedOrder, User orderPlacedBy, User orderPlacedFor)
@@ -291,6 +360,24 @@ public class OrderRepository : IOrderRepository
     public async Task SaveAsync()
     {
         await CafeContext.SaveChangesAsync();
+        return;
+    }
+
+    public async Task CancelPendingOrders()
+    {
+        DateTime now = DateTime.Now;
+        List<Guid> toBeCancelledOrders = await CafeContext.Orders
+            .Where(o => o.PaymentStatus == PaymentStatus.Pending)
+            .Where(o => EF.Functions.DateDiffMinute(o.OrderPlaced, DateTime.Now) >= 10)
+            .Select(o => o.Id)
+            .ToListAsync();
+
+        
+        foreach (Guid beCancelledOrder in toBeCancelledOrders)
+        {
+            await MarkOrderAsFailed(beCancelledOrder, "The order was made void since the payment was not made.");
+        }
+
         return;
     }
 }

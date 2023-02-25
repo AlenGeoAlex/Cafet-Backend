@@ -35,6 +35,7 @@ public class SearchController : AbstractController
     public async Task<ActionResult<List<StaffCheckOrderDto>>> GetOrder([FromQuery] OrderSearchSpecificationParam param)
     {
         OrderSearchSpecification specification = new OrderSearchSpecification(param);
+        specification.AddFilterCondition(x => x.PaymentStatus == PaymentStatus.Success);
         List<Order> searchOrderFor = await OrderRepository.GetOrdersFor(specification);
         return Ok(Mapper.Map<List<StaffCheckOrderDto>>(searchOrderFor));
     }

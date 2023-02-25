@@ -47,6 +47,10 @@ public class Order : KeyedEntity<Guid>
      [Required]
      public PaymentStatus PaymentStatus { get; set; }
      
+     [Column(TypeName = "datetime2")]
+     public DateTime? PaymentStatusUpdatedAt { get; set; }
+     
+     public string? PaymentFailedReason { get; set; }
 }
 
 public enum PaymentStatus

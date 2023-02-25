@@ -57,6 +57,7 @@ public static class BootstrapExtension
         applicationBuilder.Services.AddScoped<IMailService, MailService>();
 
         applicationBuilder.Services.AddHostedService<StatisticsHostService>();
+        applicationBuilder.Services.AddHostedService<CancelPendingOrdersTask>();
         applicationBuilder.Services.AddScoped<IScopedProcessingService, ScopedStatisticsService>();        
         if (options.RefreshTokenSettings.CacheMethod == "MEMORY")
         {

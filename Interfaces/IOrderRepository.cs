@@ -17,7 +17,13 @@ public interface IOrderRepository
 
     Task<string?> MarkOrderAsComplete(Guid orderId);
 
+    Task<string?> MarkOrderAsFailed(Guid orderId, string reason = null);
+
+    Task<bool> MakeupFailedOrderStock(Guid orderId);
+
     Task<Order?> GetOrderOfId(Guid orderId);
 
     Task SaveAsync();
+
+    Task CancelPendingOrders();
 }
