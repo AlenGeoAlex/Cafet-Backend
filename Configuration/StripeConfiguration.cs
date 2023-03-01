@@ -6,12 +6,7 @@ public class StripeConfiguration : AbstractConfigurationOptions
     
     public Redirections Redirections { get; set; }
 
-    public StripeConfiguration(string secretToken, Redirections redirections)
-    {
-        SecretToken = secretToken;
-        Redirections = redirections;
-    }
-
+    public Redirections WalletRedirection { get; set; }
     public StripeConfiguration()
     {
     }

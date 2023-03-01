@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Cafet_Backend.Abstracts;
+using Cafet_Backend.Enums;
 using Cafet_Backend.Interfaces;
 using Cafet_Backend.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Stripe;
 using Stripe.Checkout;
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 using Order = Cafet_Backend.Models.Order;
 using StripeConfiguration = Cafet_Backend.Configuration.StripeConfiguration;
 
@@ -17,13 +19,15 @@ public class PaymentController : AbstractController
 
     private readonly ILogger<PaymentController> Logger;
     private readonly IOrderRepository OrderRepository;
+    private readonly IWalletRepository WalletRepository;
     private readonly Configuration.StripeConfiguration StripeConfiguration;
 
-    public PaymentController(ILogger<PaymentController> logger, IOrderRepository orderRepository, IOptions<StripeConfiguration> options)
+    public PaymentController(ILogger<PaymentController> logger, IOrderRepository orderRepository,IWalletRepository walletRepository,  IOptions<StripeConfiguration> options)
     {
         Logger = logger;
         OrderRepository = orderRepository;
         StripeConfiguration = options.Value;
+        WalletRepository = walletRepository;
     }
 
     [HttpPost]
@@ -56,29 +60,33 @@ public class PaymentController : AbstractController
                     {
                         return BadRequest("The checkout session is unknown");
                     }
-                    
-                    if (!session.Metadata.ContainsKey("OrderId"))
+
+                    PaymentType verifyPaymentType = await VerifyPaymentType(session);
+                    if (verifyPaymentType == PaymentType.Unknown)
                     {
-                        return BadRequest("An unknown order id was provided");
+                        return BadRequest("Failed to validate payment type");
                     }
 
-                    string idRaw = session.Metadata["OrderId"];
-
-                    bool tryParse = Guid.TryParse(idRaw, out Guid orderId);
-
-                    if (!tryParse)
+                    if (verifyPaymentType == PaymentType.Order)
                     {
-                        return BadRequest("A malformed order id was provided");
-                    }
+                        string? markOrderAsComplete = await MarkOrderAsComplete(session);
+                        if (string.IsNullOrEmpty(markOrderAsComplete))
+                        {
+                            return Ok();
+                        }
 
-                    string? markOrderAsComplete = await OrderRepository.MarkOrderAsComplete(orderId);
-
-                    if (string.IsNullOrEmpty(markOrderAsComplete))
+                        return BadRequest(markOrderAsComplete);
+                    }else if (verifyPaymentType == PaymentType.Wallet)
                     {
-                        return Ok();
-                    }
+                        string? updateWalletPayment = await UpdateWalletPayment(session);
+                        
+                        if (string.IsNullOrEmpty(updateWalletPayment))
+                        {
+                            return Ok();
+                        }
 
-                    return BadRequest(markOrderAsComplete);
+                        return BadRequest(updateWalletPayment);
+                    }
                 }
                     break;
                 case Events.CheckoutSessionAsyncPaymentFailed:
@@ -87,33 +95,47 @@ public class PaymentController : AbstractController
                     if (session == null)
                         return BadRequest("The checkout session is unknown");
 
-                    if (!session.Metadata.ContainsKey("OrderId"))
-                        return BadRequest("An unknown order id was provided");
+                    PaymentType paymentType = await VerifyPaymentType(session);
 
-                    string idRaw = session.Metadata["OrderId"];
-
-                    bool tryParse = Guid.TryParse(idRaw, out Guid orderId);
-
-                    if (!tryParse)
+                    if (paymentType == PaymentType.Order)
                     {
-                        return BadRequest("A malformed order id was provided");
-                    }
+                        if (!session.Metadata.ContainsKey("OrderId"))
+                            return BadRequest("An unknown order id was provided");
+
+                        string idRaw = session.Metadata["OrderId"];
+
+                        bool tryParse = Guid.TryParse(idRaw, out Guid orderId);
+
+                        if (!tryParse)
+                        {
+                            return BadRequest("A malformed order id was provided");
+                        }
                     
-                    Order? orderOfId = await OrderRepository.GetOrderOfId(orderId);
-                    if (orderOfId == null)
-                    {
-                        return BadRequest("An unknown order was provided");
-                    }
+                        Order? orderOfId = await OrderRepository.GetOrderOfId(orderId);
+                        if (orderOfId == null)
+                        {
+                            return BadRequest("An unknown order was provided");
+                        }
 
-                    string? markOrderAsFailed = await OrderRepository.MarkOrderAsFailed(orderId,
-                        "Failed payment gateway response has been received.");
+                        string? markOrderAsFailed = await OrderRepository.MarkOrderAsFailed(orderId,
+                            "Failed payment gateway response has been received.");
 
-                    if (string.IsNullOrEmpty(markOrderAsFailed))
+                        if (string.IsNullOrEmpty(markOrderAsFailed))
+                        {
+                            return Ok();
+                        }
+
+                        return BadRequest(markOrderAsFailed);
+                    }else if (paymentType == PaymentType.Wallet)
                     {
                         return Ok();
                     }
+                    else
+                    {
+                        return BadRequest();
+                    }
+                    
 
-                    return BadRequest(markOrderAsFailed);
                 }
                     break;
             }
@@ -125,5 +147,84 @@ public class PaymentController : AbstractController
             Logger.LogError(e.ToString());
             return BadRequest();
         }
+    }
+
+    private async Task<string?> MarkOrderAsComplete(Session session)
+    {
+        if (!session.Metadata.ContainsKey("OrderId"))
+        {
+            return ("An unknown order id was provided");
+        }
+
+        string idRaw = session.Metadata["OrderId"];
+
+        bool tryParse = Guid.TryParse(idRaw, out Guid orderId);
+
+        if (!tryParse)
+        {
+            return ("A malformed order id was provided");
+        }
+
+        string? markOrderAsComplete = await OrderRepository.MarkOrderAsComplete(orderId);
+
+        if (string.IsNullOrEmpty(markOrderAsComplete))
+        {
+            return null;
+        }
+
+        return (markOrderAsComplete);
+    }
+    
+    private async Task<string?> UpdateWalletPayment(Session session)
+    {
+        try
+        {
+            if (!session.Metadata.ContainsKey("UserId"))
+            {
+                return ("An unknown user id was provided");
+            }
+
+            long? sessionAmountTotal = session.AmountTotal;
+            if (!sessionAmountTotal.HasValue)
+            {
+                return ("Failed to get the recharge amount!");
+            }
+
+            string idRaw = session.Metadata["UserId"];
+
+            int userId = Convert.ToInt32(idRaw);
+
+            bool credit = await WalletRepository.Credit(userId, userId, sessionAmountTotal.Value/100, null, true);
+
+            if (!credit)
+            {
+                return "Failed to charge the user";
+            }
+
+            return null;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.ToString());
+            return e.ToString();
+        }
+    }
+
+    private async Task<PaymentType> VerifyPaymentType(Session session)
+    {
+        if (!session.Metadata.ContainsKey("Type"))
+        {
+            return PaymentType.Unknown;
+        }
+        
+
+        string typeRaw = session.Metadata["Type"];
+        Console.WriteLine(typeRaw);
+        bool tryParse = Enum.TryParse(typeRaw, out PaymentType type);
+
+        if (!tryParse)
+            return PaymentType.Unknown;
+
+        return type;
     }
 }

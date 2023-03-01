@@ -28,7 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Enums" />
     <Folder Include="wwwroot\_images\_food" />
   </ItemGroup>
 

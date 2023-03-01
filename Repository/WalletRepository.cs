@@ -71,7 +71,7 @@ public class WalletRepository : IWalletRepository
     {
         if (amount < 1)
             return false;
-        
+
         User? rec = await Context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         if (rec == null)
@@ -102,7 +102,7 @@ public class WalletRepository : IWalletRepository
             RechargeTime = DateTime.Now,
         };
 
-        
+
         
         await Context.WalletHistories.AddAsync(walletHistory);
         await Context.SaveChangesAsync();
@@ -140,4 +140,6 @@ public class WalletRepository : IWalletRepository
             .Where(wh => wh.RecipientId == userId)
             .ToListAsync();
     }
+    
+    
 }

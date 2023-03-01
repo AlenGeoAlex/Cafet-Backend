@@ -92,7 +92,7 @@ public class OrderController : AbstractController
         }
         
         metadata.Add("OrderId", orderForPayment.Id.ToString());
-
+        
         Session? session = await StripeSessionManager.CreateCheckoutSessionFor(orderForPayment);
         
         if (session == null)

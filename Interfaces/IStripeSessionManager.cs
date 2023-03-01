@@ -6,5 +6,6 @@ namespace Cafet_Backend.Interfaces;
 
 public interface IStripeSessionManager
 {
+    Task<Session?> CreateCheckoutSessionForWalletHistory(User user, double amount);
     Task<Session?> CreateCheckoutSessionFor(Order order);
 }
