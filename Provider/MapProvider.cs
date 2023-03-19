@@ -63,8 +63,9 @@ public class MapProvider : Profile
             .ForMember(dto => dto.OrderedFoods, o => o.MapFrom(d => d.OrderItems))
             .ForMember(dto => dto.PaymentFailStatusReason, o => o.MapFrom(d => d.PaymentFailedReason))
             .ForMember(dto => dto.PaymentStatusUpdatedAt, o => o.MapFrom(d => d.PaymentStatusUpdatedAt))
-
             .ForMember(dto => dto.PaymentStatus, o => o.MapFrom(d => d.PaymentStatus))
+            .ForMember(dto => dto.PaymentMethod, o => o.MapFrom(d => d.WalletPayment))
+            .ForMember(dto => dto.PaymentStatusRaw, o => o.MapFrom(d => d.PaymentStatus.ToString()))
             ;
 
         CreateMap<OrderItems, StaffCheckFoodDto>()

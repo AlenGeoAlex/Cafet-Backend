@@ -11,6 +11,7 @@ using Cafet_Backend.Models;
 using Cafet_Backend.Provider;
 using Cafet_Backend.QueryParams;
 using Google.Apis.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -46,9 +47,8 @@ public class AuthController : AbstractController
             return BadRequest("No email address provided!");
         }
         
-        
         User? userOfEmail = await _userRepository.GetUserOfEmail(emailAddress);
-        if (userOfEmail == null)
+        if (userOfEmail == null || userOfEmail.Deleted || !userOfEmail.Activated)
         {
             return Unauthorized("Invalid Credentials Provided!");
         }
@@ -124,8 +124,14 @@ public class AuthController : AbstractController
     public async Task<IActionResult> SocialLogin([FromBody] SocialUser socialUser)
     {
         User? exists = await _userRepository.GetUserOfEmail(socialUser.Email);
+        
         if (exists != null)
         {
+            if (exists.Deleted || !exists.Activated)
+            {
+                return Unauthorized("Invalid Credentials Provided!");
+            }
+            
             GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
             settings.Audience = new List<string>() { "" };
             try
@@ -241,6 +247,7 @@ public class AuthController : AbstractController
     }
 
     [HttpPost("reset-pass")]
+    [Authorize(Roles = "Admin, User")]
     public async Task<ActionResult> ResetUserPassword([FromBody] ResetPassword resetPassword)
     {
         User? userOfEmail = await _userRepository.GetUserOfEmail(resetPassword.EmailAddress);

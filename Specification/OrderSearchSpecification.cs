@@ -13,7 +13,6 @@ public class OrderSearchSpecification : Specification<Order>
     {
         OrderSearchSpecificationParam = orderSearchSpecificationParam;
         
-        Console.WriteLine(orderSearchSpecificationParam.ToString());
 
         if (orderSearchSpecificationParam.ignoreCancelled.HasValue)
         {
