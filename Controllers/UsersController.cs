@@ -9,6 +9,7 @@ using Cafet_Backend.QueryParams;
 using Cafet_Backend.Specification;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Stripe.Checkout;
 
 namespace Cafet_Backend.Controllers;
 
@@ -17,13 +18,15 @@ public class UsersController : AbstractController
     private readonly IUserRepository UserRepository;
     private readonly IWalletRepository WalletRepository;
     private readonly IOrderRepository OrderRepository;
+    private readonly IStripeSessionManager StripeSessionManager;
     private readonly IMapper Mapper;
 
-    public UsersController(IUserRepository userRepository, IMapper mapper, IWalletRepository walletRepository, IOrderRepository orderRepository, MailModelManager mailModelManager)
+    public UsersController(IUserRepository userRepository, IMapper mapper, IWalletRepository walletRepository, IOrderRepository orderRepository, MailModelManager mailModelManager, IStripeSessionManager stripeSessionManager)
     {
         UserRepository = userRepository;
         WalletRepository = walletRepository;
         OrderRepository = orderRepository;
+        StripeSessionManager = stripeSessionManager;
         Mapper = mapper;
     }
 
@@ -126,22 +129,31 @@ public class UsersController : AbstractController
         if (string.IsNullOrEmpty(inputParams.EmailAddress))
         {
             userOfEmail = requestAuthor;
+            Session? checkoutSessionForWalletHistory = await StripeSessionManager.CreateCheckoutSessionForWalletHistory(userOfEmail, inputParams.BalanceToAdd );
+
+            if (checkoutSessionForWalletHistory == null)
+            {
+                return BadRequest("Failed to create a stripe session");
+            }
+
+            return Ok(new StripeSessionUrl(checkoutSessionForWalletHistory.Url));
         }
         else
         {
             userOfEmail = await UserRepository.GetUserOfEmail(inputParams.EmailAddress);
             
+            if (userOfEmail == null)
+                return BadRequest("The user is unknown!");
+            
+            bool credit = await WalletRepository.Credit(userOfEmail.Id, requestAuthor.Id, inputParams.BalanceToAdd);
+
+            if (!credit)
+                return BadRequest("Failed to update credit!");
+
+            return Ok();
         }
         
-        if (userOfEmail == null)
-            return BadRequest("The user is unknown!");
 
-        bool credit = await WalletRepository.Credit(userOfEmail.Id, requestAuthor.Id, inputParams.BalanceToAdd);
-
-        if (!credit)
-            return BadRequest("Failed to update credit!");
-
-        return Ok();
     }
 
     [HttpPost("update")]
@@ -213,6 +225,10 @@ public class UsersController : AbstractController
 
         OrderHistorySpecification specification = new OrderHistorySpecification(param);
         specification.AddFilterCondition(x => x.OrderPlacedForId == requestAuthor.Id);
+        if (param.PaymentStatus.HasValue)
+        {
+            specification.AddFilterCondition(x => x.PaymentStatus == (PaymentStatus) param.PaymentStatus.Value);
+        }
 
         List<Order> orders = await OrderRepository.GetOrdersFor(specification);
 

@@ -5,6 +5,7 @@ namespace Cafet_Backend.Models;
 
 public class Order : KeyedEntity<Guid>
 {
+     
      [Column(TypeName = "datetime2")]
      public DateTime OrderPlaced { get; set; }
      
@@ -43,4 +44,24 @@ public class Order : KeyedEntity<Guid>
      [Required]
      public bool Cancelled { get; set; }
      
+     [Required]
+     public PaymentStatus PaymentStatus { get; set; }
+     
+     [Column(TypeName = "datetime2")]
+     public DateTime? PaymentStatusUpdatedAt { get; set; }
+     
+     public string? PaymentFailedReason { get; set; }
+
+     [NotMapped]
+     public bool IsFinished
+     {
+          get => OrderCancelled != null || OrderDelivered != null;
+     }
+}
+
+public enum PaymentStatus
+{
+     Pending,
+     Success,
+     Cancelled
 }

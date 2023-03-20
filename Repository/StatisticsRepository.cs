@@ -22,22 +22,107 @@ public class StatisticsRepository : IStatisticsRepository
         Mapper = mapper;
     }
 
-    public async Task<bool> Test()
+    public async Task<List<UserActivity>> GetUserActivityAsync(
+        UserOrderActivitySpecification? orderActivitySpecification,
+        UserWalletActivitySpecification? walletActivitySpecification)
     {
-        /*var listAsync = Context.OrderItems
-            .GroupBy(x => x.FoodId)
-            .Select(
-                t => new
+        List<UserActivity> userActivities = new List<UserActivity>();
+
+        if (orderActivitySpecification != null)
+        {
+            List<Order> listAsync = await SpecificationProvider<Order, Guid>
+                .GetQuery(Context.Set<Order>(), orderActivitySpecification)
+                .Where(o => o.OrderDelivered != null)
+                .Include(o => o.OrderItems)
+                .ToListAsync();
+
+            foreach (Order order in listAsync)
+            {
+                UserActivity newActivity = new UserActivity()
                 {
-                    foodId = t.Key,
-                    name = t.Select(x => x.FoodName),
-                    sum = t.Sum(x => x.Quantity)
-                })
-            .OrderByDescending(x => x.sum)
-            .Take(3)
-            .ToDictionary(x => x.name.FirstOrDefault("Unknown"), y => y.sum);*/
+                    ActivityType = order.Cancelled ? ActivityType.CancelledOrder.ToString() : ActivityType.CompletedOrder.ToString(),
+                    
+                    ActivityId = order.Id.ToString(),
+                    
+                    Amount = order.OrderAmount,
+                    
+                    ActivityOccurence = order.OrderPlaced.ToShortDateString() 
+                                        + " " 
+                                        + order.OrderDelivered?.ToShortTimeString(),
+                    
+                    ActivityOccurenceRaw = order.OrderPlaced.Ticks,
+                    
+                    ActivityCompleted = order.OrderDelivered?.ToShortDateString() 
+                                        + " " 
+                                        + order.OrderDelivered?.ToShortTimeString(),
+                    
+                    ActivityCompletedRaw = order.OrderDelivered?.Ticks,
+                    
+                    Others = GetConcatedNameOf(order.OrderItems)
+                };
+                
+                userActivities.Add(newActivity);
+            }
+        }
         
-            return true;
+        if (walletActivitySpecification != null)
+        {
+            List<WalletHistory> listAsync = await SpecificationProvider<WalletHistory, int>
+                .GetQuery(Context.Set<WalletHistory>(), walletActivitySpecification)
+                .Where(o => o.RechargeStatus)
+                .ToListAsync();
+
+            foreach (WalletHistory walletActivity in listAsync)
+            {
+                UserActivity newActivity = new UserActivity()
+                {
+                    ActivityId = walletActivity.Id.ToString(),
+                    ActivityType = walletActivity.Credit ? ActivityType.WalletCredit.ToString() : ActivityType.WalletDebit.ToString(),
+                    ActivityOccurence = walletActivity.RechargeTime.ToShortDateString() 
+                                        + " " 
+                                        + walletActivity.RechargeTime.ToShortTimeString(),
+                    
+                    ActivityOccurenceRaw = walletActivity.RechargeTime.Ticks,
+                    
+                    ActivityCompleted = walletActivity.RechargeTime.ToShortDateString() 
+                    + " " 
+                    + walletActivity.RechargeTime.ToShortTimeString(),
+                    
+                    ActivityCompletedRaw = walletActivity.RechargeTime.Ticks,
+                    
+                    Amount = walletActivity.Amount
+                };
+                
+                userActivities.Add(newActivity);
+            }
+        }
+
+        if (userActivities.Count <= 0)
+            return userActivities;
+
+        userActivities.Sort((a, b) => a.ActivityOccurenceRaw.CompareTo(b.ActivityOccurenceRaw));
+
+        return userActivities;
+    }
+
+    public async Task<List<RevenueReportDto>> GetRevenueAsync(int year)
+    {
+        var listAsync = await Context.Orders
+            .Where(x => x.OrderDelivered != null && x.OrderPlaced.Year == year)
+            .GroupBy(x => x.OrderPlaced.Month)
+            .Select(x => new
+            {
+                Id = x.Key,
+                Sum = x.Sum(s => s.OrderAmount)
+            })
+            .ToListAsync();
+
+        List<RevenueReportDto> reportDtos = new List<RevenueReportDto>();
+        foreach (var x1 in listAsync)
+        {
+           reportDtos.Add(new RevenueReportDto(){Month = x1.Id, Revenue = x1.Sum});
+        }
+        return reportDtos;
     }
 
     /// <summary>
@@ -107,5 +192,17 @@ public class StatisticsRepository : IStatisticsRepository
         };
 
         return statisticsDto;
+    }
+
+    private string? GetConcatedNameOf(List<OrderItems> orderItemsList)
+    {
+        string s = "";
+        foreach (OrderItems orderItems in orderItemsList)
+        {
+            s += " " + orderItems.FoodName;
+            if(s.Length <= 20)
+                break;
+        }
+        return s;
     }
 }

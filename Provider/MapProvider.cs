@@ -61,6 +61,31 @@ public class MapProvider : Profile
             .ForMember(dto => dto.IsCompleted, o => o.MapFrom(d => d.OrderDelivered != null))
             .ForMember(dto => dto.IsCancelled, o => o.MapFrom(d => d.Cancelled))
             .ForMember(dto => dto.OrderedFoods, o => o.MapFrom(d => d.OrderItems))
+            .ForMember(dto => dto.PaymentFailStatusReason, o => o.MapFrom(d => d.PaymentFailedReason))
+            .ForMember(dto => dto.PaymentStatusUpdatedAt, o => o.MapFrom(d => d.PaymentStatusUpdatedAt))
+            .ForMember(dto => dto.PaymentStatus, o => o.MapFrom(d => d.PaymentStatus))
+            .ForMember(dto => dto.PaymentMethod, o => o.MapFrom(d => d.WalletPayment))
+            .ForMember(dto => dto.PaymentStatusRaw, o => o.MapFrom(d => d.PaymentStatus.ToString()))
+            ;
+        
+        CreateMap<Order, CompletedOrderView>()
+            .ForMember(dto => dto.OrderId, o => o.MapFrom(d => d.Id))
+            .ForMember(dto => dto.OrderedEmail, o => o.MapFrom(d => d.OrderPlacedFor.EmailAddress))
+            .ForMember(dto => dto.OrderedDate, o => o.MapFrom(d => d.OrderPlaced.Date.ToShortDateString()))
+            .ForMember(dto => dto.OrderedTime, o => o.MapFrom(d => d.OrderPlaced.ToShortTimeString()))
+            .ForMember(dto => dto.OrderedUserName, o => o.MapFrom(d => d.OrderPlacedFor.FullName))
+            .ForMember(dto => dto.IsCompleted, o => o.MapFrom(d => d.OrderDelivered != null))
+            .ForMember(dto => dto.IsCancelled, o => o.MapFrom(d => d.Cancelled))
+            .ForMember(dto => dto.OrderedFoods, o => o.MapFrom(d => d.OrderItems))
+            .ForMember(dto => dto.PaymentFailStatusReason, o => o.MapFrom(d => d.PaymentFailedReason))
+            .ForMember(dto => dto.PaymentStatusUpdatedAt, o => o.MapFrom(d => d.PaymentStatusUpdatedAt))
+            .ForMember(dto => dto.PaymentStatus, o => o.MapFrom(d => d.PaymentStatus))
+            .ForMember(dto => dto.PaymentMethod, o => o.MapFrom(d => d.WalletPayment))
+            .ForMember(dto => dto.PaymentStatusRaw, o => o.MapFrom(d => d.PaymentStatus.ToString()))
+            .ForMember(dto => dto.OrderDeliveredAt, o => o.MapFrom(d => d.OrderDelivered.HasValue ? d.OrderDelivered.Value.ToShortDateString() + " "+ d.OrderDelivered.Value.ToShortTimeString() : null))
+            .ForMember(dto => dto.OrderCancelledAt, o => o.MapFrom(d => d.OrderCancelled.HasValue ? d.OrderCancelled.Value.ToShortDateString() + " "+ d.OrderCancelled.Value.ToShortTimeString() : null))
+            .ForMember(dto => dto.IsFinished, o => o.MapFrom(d => d.IsFinished))
+
             ;
 
         CreateMap<OrderItems, StaffCheckFoodDto>()

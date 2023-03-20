@@ -6,10 +6,9 @@ public class StripeConfiguration : AbstractConfigurationOptions
     
     public Redirections Redirections { get; set; }
 
-    public StripeConfiguration(string secretToken, Redirections redirections)
+    public Redirections WalletRedirection { get; set; }
+    public StripeConfiguration()
     {
-        SecretToken = secretToken;
-        Redirections = redirections;
     }
 
     public override string ConfigBinder()
@@ -24,9 +23,7 @@ public class Redirections
     
     public string Cancelled { get; set; }
 
-    public Redirections(string success, string cancelled)
+    public Redirections()
     {
-        Success = success;
-        Cancelled = cancelled;
     }
 }

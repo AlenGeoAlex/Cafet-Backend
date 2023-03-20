@@ -2,24 +2,16 @@
 
 namespace Cafet_Backend.Specification;
 
-public class OrderHistorySpecification : Specification<Order>
+public class UserWalletActivitySpecification : Specification<WalletHistory>
 {
-    public OrderHistorySpecification(OrderHistorySpecificationParam param)
+    public UserWalletActivitySpecification(UserActivitySpecificationParam param)
     {
-        AddInclude(x => x.OrderItems);
-        AddInclude(x => x.OrderPlacedFor);
-        
-        if (param.OnlyActive)
-        {
-            AddFilterCondition(x => x.OrderDelivered == null);
-        }
-
         if (!string.IsNullOrEmpty(param.From))
         {
             try
             {
                 DateTime fromDate = DateTime.Parse(param.From);
-                AddFilterCondition(x => x.OrderPlaced.Date >= fromDate.Date);
+                AddFilterCondition(x => x.RechargeTime >= fromDate.Date);
             }
             catch (Exception e)
             {
@@ -33,24 +25,27 @@ public class OrderHistorySpecification : Specification<Order>
             try
             {
                 DateTime toDate = DateTime.Parse(param.To);
-                AddFilterCondition(x => x.OrderPlaced.Date <= toDate.Date);
+                AddFilterCondition(x => x.RechargeTime <= toDate.Date);
             }
             catch (Exception e)
             {
                 Console.WriteLine("Invalid date format is provided for To parameter");
             }
         }
+        
+        int id;
+        try
+        {
+            id = Convert.ToInt32(param.User);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Failed to parse the user Id");
+            throw;
+        }
+        
+        AddFilterCondition(x => x.RecipientId == id);
+
     }
 }
 
-public class OrderHistorySpecificationParam
-{
-    public string? From { get; set; }
-    
-    public string? To { get; set; }
-    
-    public bool OnlyActive { get; set; }
-    
-    public int? PaymentStatus { get; set; }
-    
-}

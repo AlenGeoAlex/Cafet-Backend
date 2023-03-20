@@ -2,18 +2,10 @@
 
 namespace Cafet_Backend.Specification;
 
-public class OrderHistorySpecification : Specification<Order>
+public class UserOrderActivitySpecification : Specification<Order>
 {
-    public OrderHistorySpecification(OrderHistorySpecificationParam param)
+    public UserOrderActivitySpecification(UserActivitySpecificationParam param)
     {
-        AddInclude(x => x.OrderItems);
-        AddInclude(x => x.OrderPlacedFor);
-        
-        if (param.OnlyActive)
-        {
-            AddFilterCondition(x => x.OrderDelivered == null);
-        }
-
         if (!string.IsNullOrEmpty(param.From))
         {
             try
@@ -40,17 +32,19 @@ public class OrderHistorySpecification : Specification<Order>
                 Console.WriteLine("Invalid date format is provided for To parameter");
             }
         }
-    }
-}
 
-public class OrderHistorySpecificationParam
-{
-    public string? From { get; set; }
-    
-    public string? To { get; set; }
-    
-    public bool OnlyActive { get; set; }
-    
-    public int? PaymentStatus { get; set; }
-    
+        int id;
+        try
+        {
+             id = Convert.ToInt32(param.User);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Failed to parse the user Id");
+            throw;
+        }
+        
+        AddFilterCondition(x => x.OrderPlacedFor.Id == id);
+
+    }
 }
