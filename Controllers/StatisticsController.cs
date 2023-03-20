@@ -40,7 +40,7 @@ public class StatisticsController : AbstractController
     }
 
     [HttpGet("order")]
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(StaffCheckOrderDto), 200)]
     public async Task<IActionResult> GetOrderBySpecification([FromQuery] OrderReportSpecificationParam specificationParam)
     {
@@ -57,5 +57,88 @@ public class StatisticsController : AbstractController
         List<Order> ordersFor = await OrderRepository.GetOrdersFor(specification);
         List<StaffCheckOrderDto> processedOrder = Mapper.Map<List<StaffCheckOrderDto>>(ordersFor);
         return Ok(processedOrder);
+    }
+    
+    [HttpGet("activity")]
+    
+    [ProducesResponseType(typeof(UserActivity), 200)]
+    public async Task<IActionResult> GetActivityOfUser([FromQuery] UserActivitySpecificationParam param)
+    {
+        if (!ModelState.IsValid)
+        {
+            Console.WriteLine(ModelState.Values);
+            return BadRequest("The request is not in good shape!");
+        }
+        
+        UserOrderActivitySpecification? orderActivitySpecification = null;
+        UserWalletActivitySpecification? walletActivitySpecification = null;
+
+        if (param.Type.HasValue)
+        {
+            if (param.Type.Value == 1)
+            {
+                orderActivitySpecification = new UserOrderActivitySpecification(param);
+            }
+            else if(param.Type == 2)
+            {
+                walletActivitySpecification = new UserWalletActivitySpecification(param);
+            }
+            else
+            {
+                orderActivitySpecification = new UserOrderActivitySpecification(param);
+                walletActivitySpecification = new UserWalletActivitySpecification(param);
+            }
+        }
+        else
+        {
+            orderActivitySpecification = new UserOrderActivitySpecification(param);
+            walletActivitySpecification = new UserWalletActivitySpecification(param);
+        }
+
+        List<UserActivity> userActivityAsync = await StatisticsRepository.GetUserActivityAsync(orderActivitySpecification, walletActivitySpecification);
+        return Ok(userActivityAsync);
+    }
+
+    [HttpGet("order-id")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetOrderOfId(string orderId)
+    {
+        if (!Guid.TryParse(orderId, out Guid result))
+        {
+            return BadRequest("Failed to parse order id");
+        }
+
+        Order? orderOfId = await OrderRepository.GetOrderOfId(result);
+
+        if (orderOfId == null)
+        {
+            return NotFound();
+        }
+        
+        CompletedOrderView staffCheckOrderDto = Mapper.Map<CompletedOrderView>(orderOfId);
+
+        return Ok(staffCheckOrderDto);
+    }
+
+    [HttpGet("revenue")]
+    public async Task<IActionResult> GetRevenueOfYear(string yr)
+    {
+        int year;
+        try
+        {
+            year = Convert.ToInt32(yr);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return BadRequest("An invalid year is provided!");
+        }
+
+        List<RevenueReportDto> revenueReportDtos = await StatisticsRepository.GetRevenueAsync(year);
+        foreach (RevenueReportDto revenueReportDto in revenueReportDtos)
+        {
+            Console.WriteLine(revenueReportDto.Month + " "+ revenueReportDto.Revenue);
+        }
+        return Ok(revenueReportDtos);
     }
 }

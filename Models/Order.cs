@@ -51,6 +51,12 @@ public class Order : KeyedEntity<Guid>
      public DateTime? PaymentStatusUpdatedAt { get; set; }
      
      public string? PaymentFailedReason { get; set; }
+
+     [NotMapped]
+     public bool IsFinished
+     {
+          get => OrderCancelled != null || OrderDelivered != null;
+     }
 }
 
 public enum PaymentStatus
