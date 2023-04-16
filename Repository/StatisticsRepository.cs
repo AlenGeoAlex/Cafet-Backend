@@ -101,7 +101,7 @@ public class StatisticsRepository : IStatisticsRepository
             return userActivities;
 
         userActivities.Sort((a, b) => a.ActivityOccurenceRaw.CompareTo(b.ActivityOccurenceRaw));
-
+        
         return userActivities;
     }
 
@@ -120,7 +120,11 @@ public class StatisticsRepository : IStatisticsRepository
         List<RevenueReportDto> reportDtos = new List<RevenueReportDto>();
         foreach (var x1 in listAsync)
         {
-           reportDtos.Add(new RevenueReportDto(){Month = x1.Id, Revenue = x1.Sum});
+           reportDtos.Add(new RevenueReportDto()
+           {
+               Month = x1.Id,
+               Revenue = x1.Sum
+           });
         }
         return reportDtos;
     }

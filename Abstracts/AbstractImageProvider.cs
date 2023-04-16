@@ -37,7 +37,7 @@ public abstract class AbstractImageProvider
         return File.Exists(AsFileName(fileName));
     }
 
-    public Stream? GetImage(string fileName)
+    public Stream? GetImageAsStream(string fileName)
     {
         FileStream imageStream = File.Open(AsFileName(fileName), FileMode.Open);
         return imageStream;
@@ -73,6 +73,6 @@ public abstract class AbstractImageProvider
 
     public Stream? GetDefaultImage()
     {
-        return GetImage(GetDefaultImageName());
+        return GetImageAsStream(GetDefaultImageName());
     }
 }

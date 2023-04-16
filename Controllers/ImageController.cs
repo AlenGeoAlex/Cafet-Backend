@@ -17,7 +17,7 @@ public class ImageController : AbstractController
     [HttpGet("food/{id}")]
     public async Task<IActionResult> GetFoodImage(string id)
     {
-        Stream? stream = ImageProviderManager.FoodImageProvider.GetImage(id);
+        Stream? stream = ImageProviderManager.FoodImageProvider.GetImageAsStream(id);
         if (stream == null)
             return NotFound();
 
